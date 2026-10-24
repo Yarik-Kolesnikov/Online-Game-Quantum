@@ -303,11 +303,37 @@ function renderRating() {
   const place = list.findIndex((r) => r.id === state.resultId);
   $("resultPlace").textContent = place >= 0 ? place + 1 + " із " + list.length : "—";
 }
+/* Firebase (Firestore) для версії поза Claude: налаштування в js/firebase-config.js.
+   API Firestore (collection/doc/set/onSnapshot) збігається з базою артефакту, тож решта коду спільна. */
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.append(s);
+  });
+}
+async function initFirebase() {
+  const cfg = window.BL && BL.firebaseConfig;
+  if (!cfg || !cfg.apiKey || !cfg.projectId) return null;
+  try {
+    if (!window.firebase) {
+      await loadScript(FIREBASE_SDK + "firebase-app-compat.js");
+      await loadScript(FIREBASE_SDK + "firebase-firestore-compat.js");
+    }
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    return firebase.firestore();
+  } catch (e) {
+    console.warn("Firebase недоступний, рейтинг зберігається в цьому браузері", e);
+    return null;
+  }
+}
 async function initStore() {
   const note = (t) => { $("storeNote").textContent = t; renderRating(); };
   results = readLocal();
   note("Рейтинг цього браузера.");
   try { db = await window.claude?.use?.("db"); } catch (e) { db = null; }
+  if (!db) db = await initFirebase(); // версія на GitHub Pages: спільний рейтинг через Firestore
   if (!db) { note("Загальний рейтинг недоступний, показано результати цього браузера."); return; }
   localMode = false;
   results = [];
