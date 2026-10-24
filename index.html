@@ -27,7 +27,6 @@
       <div class="brand-sub">Факультет бізнесу, технологій та економіки</div>
     </div>
   </div>
-  <button class="home-btn" id="homeBtn" type="button" hidden>← На головну</button>
   <div class="ticker" aria-label="Кафедри факультету">
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
@@ -35,6 +34,8 @@
 </header>
 
 <main>
+  <!-- кнопка повернення: під логотипом, видно на полі карток і в рейтингу -->
+  <button class="home-btn" id="homeBtn" type="button" hidden>← На головну</button>
   <!-- ===== СТАРТ ===== -->
   <section class="screen active" id="screenStart">
     <div class="start-grid">
@@ -58,11 +59,20 @@
         <div class="panel-head">
           <span class="panel-tag">Реєстрація учасника</span>
         </div>
+        <!-- незавершена гра: з'являється, якщо гравець вийшов на головну посеред гри -->
+        <div class="resume" id="resumeBox" hidden>
+          <div class="resume-info">
+            <span class="resume-label">Незавершена гра</span>
+            <b id="resumeName">—</b>
+            <span class="resume-meta mono" id="resumeMeta">0 / 10 · 00:00</span>
+          </div>
+          <button type="button" class="btn btn-primary" id="resumeBtn">Продовжити гру <span aria-hidden="true">→</span></button>
+        </div>
         <label for="playerName">Введіть ПІБ</label>
         <input id="playerName" name="playerName" type="text" maxlength="48" placeholder="Ім'я">
         <p class="hint">Ім'я з'явиться в загальному рейтингу.</p>
         <p class="err" id="nameErr" hidden>Введіть ПІБ: щонайменше прізвище та ім'я через пробіл.</p>
-        <button type="submit" class="btn btn-primary btn-wide">Почати гру <span aria-hidden="true">→</span></button>
+        <button type="submit" class="btn btn-primary btn-wide" id="startBtn"><span id="startLabel">Почати гру</span> <span aria-hidden="true">→</span></button>
         <button type="button" class="btn btn-ghost btn-wide" id="openRatingBtn">Переглянути рейтинг</button>
         <details class="rules" open>
           <summary>Правила гри</summary>
@@ -100,7 +110,7 @@
 
   <!-- ===== РЕЗУЛЬТАТ + РЕЙТИНГ ===== -->
   <section class="screen" id="screenResult">
-    <div class="result-grid">
+    <div class="result-grid" id="resultGrid">
       <div class="panel" id="resultPanel">
         <div class="panel-head">
           <span class="panel-tag">Підсумок</span>
@@ -127,7 +137,6 @@
         <p class="empty" id="ratingEmpty" hidden>Поки що ніхто не зіграв. Будь першим!</p>
         <div class="rating-foot">
           <span class="store-note" id="storeNote">Завантаження рейтингу…</span>
-          <button class="btn btn-ghost btn-sm danger" id="clearBtn" hidden>Очистити рейтинг</button>
         </div>
       </div>
     </div>
