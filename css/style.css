@@ -86,7 +86,7 @@ body {
   overflow-x: hidden;
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
-button { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
@@ -117,7 +117,7 @@ button { font: inherit; color: inherit; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
 }
-.home-btn { flex-shrink: 0; background: transparent; border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.home-btn { display: inline-flex; align-items: center; margin: -20px 0 20px; background: var(--panel-solid); color: var(--text); border: 1px solid var(--line-2); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .home-btn:hover { border-color: var(--text); }
 .ticker {
   flex: 1; overflow: hidden; min-width: 0;
@@ -199,6 +199,14 @@ main {
 .hint { font-size: 13px; color: var(--muted); margin: 8px 0 18px; }
 .err { font-size: 13px; color: var(--bad); margin: -10px 0 14px; }
 .register .btn + .btn { margin-top: 10px; }
+/* блок «Продовжити гру» */
+.resume { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 14px 16px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 12%, var(--panel-solid)); }
+.resume-info { display: grid; gap: 2px; min-width: 0; }
+.resume-label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-text); font-weight: 700; }
+.resume-info b { overflow-wrap: anywhere; }
+.resume-meta { font-size: 13px; color: var(--muted); }
+.resume .btn { padding: 11px 16px; }
+.register.has-resume #startBtn { background: transparent; color: var(--text); border-color: var(--line-2); }
 .rules { margin-top: 20px; border-top: 1px dashed var(--line-2); padding-top: 14px; }
 .rules summary { cursor: pointer; font-weight: 600; color: var(--muted); }
 .rules summary:hover { color: var(--text); }
@@ -211,7 +219,7 @@ main {
 .kpis { display: flex; gap: 12px; flex-wrap: wrap; }
 .kpi { box-shadow: 0 10px 24px -22px var(--shadow); padding: 12px 18px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--panel); min-width: 140px; }
 .kpi > span { display: block; font-size: 12px; color: var(--muted); }
-.kpi b { font-size: 24px; }
+.kpi b { font-size: 24px; white-space: nowrap; }
 .kpi.time b { color: var(--accent-text); }
 .track { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin: 24px 0 10px; }
 .track i { height: 6px; border-radius: 4px; background: var(--line-2); transition: background .3s; }
@@ -235,7 +243,11 @@ main {
 }
 .cards.deal .card { animation: deal .5s ease both; }
 .card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--c); }
-.card:hover:not(.done), .card:focus-visible:not(.done) { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--c) 55%, transparent); }
+.card:focus-visible:not(.done) { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--c) 55%, transparent); }
+/* hover-ефекти лише для миші: на тач-екранах вони «залипають» після тапу */
+@media (hover: hover) {
+  .card:hover:not(.done) { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--c) 55%, transparent); }
+}
 @keyframes deal { from { opacity: .001; transform: translateY(24px) rotate(3deg); } to { opacity: 1; transform: none; } }
 .card-top { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .card-ticker { font-family: var(--font-mono); font-weight: 700; font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--c); color: var(--on, var(--chip-ink)); }
@@ -254,7 +266,7 @@ main {
 /* ---------- модалка ---------- */
 .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
 .modal-backdrop { position: absolute; inset: 0; background: rgba(17, 22, 32, .45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-.modal-card { position: relative; width: min(720px, 100%); max-height: 100%; overflow: auto; background: var(--panel-solid); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); border-radius: 22px; padding: 28px; box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--c) 45%, var(--shadow)); animation: pop .3s ease both; }
+.modal-card { position: relative; width: min(720px, 100%); max-height: 100%; overflow: auto; overscroll-behavior: contain; background: var(--panel-solid); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); border-radius: 22px; padding: 28px; box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--c) 45%, var(--shadow)); animation: pop .3s ease both; }
 @keyframes pop { from { opacity: .001; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
 .modal-band { position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--c); }
 .modal-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -286,7 +298,20 @@ main {
 .modal-actions { display: flex; justify-content: flex-end; margin-top: 22px; }
 
 /* ---------- результат + рейтинг ---------- */
-.result-grid { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.result-grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+/* лише рейтинг (кнопка «Переглянути рейтинг»): таблиця на всю ширину */
+.result-grid.rating-only { grid-template-columns: minmax(0, 1fr); max-width: min(1000px, calc(100% - 300px)); margin: 0 auto; }
+/* у режимі рейтингу кнопка «На головну» стоїть зліва на одній висоті з таблицею */
+main.rating-only .home-btn { position: absolute; z-index: 2; top: 40px; left: max(28px, env(safe-area-inset-left, 0px)); margin: 0; }
+@media (max-width: 1100px) {
+  .result-grid.rating-only { max-width: none; }
+  main.rating-only .home-btn { position: static; margin: -20px 0 20px; }
+}
+
+/* плавне перемикання теми: клас вмикається на ~0.5 с під час зміни */
+:root.theme-anim, :root.theme-anim *, :root.theme-anim *::before, :root.theme-anim *::after {
+  transition: background-color .45s ease, color .45s ease, border-color .45s ease, box-shadow .45s ease, fill .45s ease, stroke .45s ease, opacity .45s ease !important;
+}
 .result-score { font-size: 96px; font-weight: 700; line-height: 1; color: var(--accent-text); }
 .result-score small { font-size: 28px; color: var(--muted); margin-left: 6px; }
 .result-title { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin: 14px 0 4px; }
@@ -301,9 +326,15 @@ main {
 .rating-table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .rating-table th { text-align: left; font-family: var(--font-mono); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
 .rating-table td { padding: 13px 12px; border-bottom: 1px solid var(--line); }
-.rating-table td.name { overflow-wrap: anywhere; min-width: 140px; }
+.rating-table td.name { overflow-wrap: anywhere; min-width: 200px; }
+.rating-table th:first-child, .rating-table td:first-child { width: 72px; }
+.rating-table td.num, .rating-table th.num { padding-left: 24px; }
 .rating-table td.num, .rating-table th.num { text-align: right; font-family: var(--font-mono); white-space: nowrap; }
 .rating-table td.score { font-weight: 700; font-size: 18px; }
+/* вертикальні роздільники між колонками */
+.rating-table th + th, .rating-table td + td { border-left: 1px solid var(--line-2); }
+/* назви колонок і вміст комірок по центру */
+.rating-table th, .rating-table th.num, .rating-table td, .rating-table td.num { text-align: center; }
 .rating-table tr.me td { background: rgba(245, 184, 61, .16); }
 .rating-table tr.me td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .place { display: inline-grid; place-items: center; min-width: 32px; height: 32px; border-radius: 9px; font-family: var(--font-mono); font-weight: 700; border: 1px solid var(--line-2); }
@@ -330,7 +361,9 @@ main {
   animation: rise .5s ease both;
 }
 .dept-tile::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--c); }
-.dept-tile:hover { transform: translateY(-4px); border-color: var(--c); box-shadow: 0 22px 40px -26px color-mix(in srgb, var(--c) 70%, transparent); }
+@media (hover: hover) {
+  .dept-tile:hover { transform: translateY(-4px); border-color: var(--c); box-shadow: 0 22px 40px -26px color-mix(in srgb, var(--c) 70%, transparent); }
+}
 .tile-bg {
   position: absolute; right: -20%; bottom: -20%; width: 66%; height: auto; aspect-ratio: 1;
   fill: none; stroke: var(--c); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round;
@@ -379,37 +412,101 @@ main {
 @media (max-width: 600px) { .dept-figure { padding: 6px; border-radius: 16px; } }
 
 /* ---------- адаптивність ---------- */
+/* картки завжди по 5 в ряд (2 рівні ряди) до 600px, далі по 2 (5 рядів) — без «сиріт» в останньому ряду */
 @media (max-width: 1080px) {
-  .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cards { gap: 14px; }
   .result-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
   .start-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .register { position: static; order: -1; }
-  .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats { width: 100%; }
+  .stats div { flex: 1; }
   .brand-sub { font-size: 10px; }
 }
+/* планшети й телефони в альбомній орієнтації: компактні картки 5 в ряд */
+@media (max-width: 860px) and (min-width: 601px) {
+  .cards { gap: 10px; }
+  .card { aspect-ratio: auto; min-height: 172px; padding: 12px 10px 10px; border-radius: 14px; }
+  .card-ticker { font-size: 11px; padding: 2px 7px; }
+  .card-dept { font-size: 11px; margin-top: 8px; }
+  .card-num { font-size: clamp(36px, 6vw, 52px); }
+  .card-spark { height: 22px; }
+  .card-stamp { font-size: 12px; padding: 6px 8px; }
+}
 @media (max-width: 600px) {
+  .home-btn, main.rating-only .home-btn { margin: -8px 0 16px; }
   main { padding-block: 24px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .topbar { flex-wrap: wrap; gap: 10px 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .brand { margin-right: auto; }
+  .brand { flex: 1 1 0; margin-right: auto; min-width: 0; gap: 10px; }
+  .brand > div { min-width: 0; }
   .brand-name { font-size: 21px; }
+  .brand-sub { white-space: normal; line-height: 1.25; }
   .brand-mark { height: 28px; }
   .ticker { order: 3; flex-basis: 100%; }
   .theme-btn span { display: none; }
   .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .card { padding: 12px; }
-  .kpis { width: 100%; }
-  .kpi { flex: 1; min-width: 0; padding: 10px 12px; }
+  .kpis { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .kpi { min-width: 0; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; }
+  .kpi > span { font-size: 11px; line-height: 1.3; }
   .kpi b { font-size: 18px; }
   .stats div { padding: 12px 14px; }
   .stats b { font-size: 22px; }
   .panel { padding: 20px 16px; }
-  .modal-card { padding: 22px 18px; }
-  .option { padding: 13px 14px; font-size: 15px; }
+  .panel-head { flex-wrap: wrap; }
+  .modal { padding: 12px; }
+  .modal-card { padding: 22px 18px; border-radius: 18px; }
+  .modal-card h2 { margin-bottom: 16px; }
+  .options { gap: 10px; }
+  .option { padding: 13px 14px; font-size: 15px; gap: 12px; }
+  .option .letter { width: 30px; height: 30px; }
+  .modal-actions .btn { width: 100%; }
   .result-score { font-size: 72px; }
   .rating-table { font-size: 14px; }
+  .rating-table th, .rating-table td, .rating-table td.num, .rating-table th.num { padding-left: 8px; padding-right: 8px; }
+  .rating-table th { letter-spacing: .04em; font-size: 10px; }
+  .rating-table td.name { min-width: 0; }
+  .rating-table th:first-child, .rating-table td:first-child { width: 48px; }
+  .rating-table td.score { font-size: 15px; }
   .dept { grid-template-columns: 52px minmax(0, 1fr); }
+}
+/* вузькі телефони (iPhone SE, 320–400px) */
+@media (max-width: 400px) {
+  .brand-name { font-size: 17px; }
+  .brand-mark { height: 24px; gap: 3px; }
+  .brand-mark i { width: 6px; }
+  .kpi { padding: 8px 10px; }
+  .kpi b { font-size: 16px; }
+  .panel { padding: 18px 12px; }
+  .rating-table { font-size: 13px; }
+  .rating-table th, .rating-table td, .rating-table td.num, .rating-table th.num { padding: 10px 5px; }
+  .rating-table th { white-space: normal; letter-spacing: .02em; font-size: 9px; }
+  .rating-table th:first-child, .rating-table td:first-child { width: 40px; }
+  .rating-table td.score { font-size: 14px; }
+  .place { min-width: 28px; height: 28px; border-radius: 8px; }
+  .you-tag { margin-left: 4px; }
+  .result-score { font-size: 60px; }
+  .card-num { font-size: 46px; }
+}
+/* телефони в альбомній орієнтації: низький екран, економимо висоту */
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar { position: relative; top: 0; padding-block: 8px; }
+  .register { position: static; }
+  main { padding-block: 24px 48px; }
+  .modal { padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .modal-card { padding: 18px 22px; }
+  .modal-top { margin-bottom: 10px; }
+  .modal-card h2 { font-size: 17px; margin-bottom: 12px; }
+  .options { gap: 8px; }
+  .option { padding: 9px 14px; font-size: 14px; }
+  .option .letter { width: 28px; height: 28px; }
+  .feedback { margin-top: 12px; padding: 12px 16px; }
+  .modal-actions { margin-top: 14px; }
+}
+/* великі монітори: трохи ширший контейнер */
+@media (min-width: 1600px) {
+  main { max-width: 1400px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

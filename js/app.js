@@ -83,6 +83,9 @@ function initTheme() {
   applyTheme(t);
   $("themeBtn").addEventListener("click", () => {
     const next = document.documentElement.getAttribute("data-bl-theme") === "dark" ? "light" : "dark";
+    const root = document.documentElement;
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce) { root.classList.add("theme-anim"); clearTimeout(initTheme.t); initTheme.t = setTimeout(() => root.classList.remove("theme-anim"), 500); }
     applyTheme(next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
   });
@@ -112,6 +115,7 @@ function renderDepts() {
 /* ---------- екрани ---------- */
 function show(screen) {
   state.screen = screen;
+  if (screen !== "result") document.querySelector("main").classList.remove("rating-only");
   ["start", "board", "result"].forEach((s) => $("screen" + s[0].toUpperCase() + s.slice(1)).classList.toggle("active", s === screen));
   $("homeBtn").hidden = screen === "start";
   window.scrollTo(0, 0);
@@ -130,6 +134,27 @@ const answeredCount = () => state.cards.filter((c) => c.answered).length;
 function startGame(name) {
   state = { screen: "board", player: name, cards: pickCards(), startedAt: Date.now(), finishedAt: 0, resultId: null };
   $("boardPlayer").textContent = name;
+  renderBoard(true);
+  show("board");
+  startTimer();
+}
+
+/* ---------- незавершена гра: живе лише в пам'яті сторінки ----------
+   Через «На головну» гру можна продовжити; перезавантаження чи закриття вкладки її знищує. */
+const inProgress = () => state.cards.length === CARDS && !state.finishedAt;
+function renderResume() {
+  const on = inProgress();
+  $("resumeBox").hidden = !on;
+  $("startForm").classList.toggle("has-resume", on);
+  $("startLabel").textContent = on ? "Почати нову гру" : "Почати гру";
+  if (on) {
+    $("resumeName").textContent = state.player;
+    $("resumeMeta").textContent = "відповіді: " + answeredCount() + " / " + CARDS + " · час: " + fmt(Date.now() - state.startedAt);
+  }
+}
+function resumeGame() {
+  if (!inProgress()) return;
+  $("boardPlayer").textContent = state.player;
   renderBoard(true);
   show("board");
   startTimer();
@@ -237,7 +262,7 @@ function closeModal() {
 }
 
 /* ---------- рейтинг: спільна база, запасний варіант — цей браузер ---------- */
-let db = null, results = [], localMode = true, isOwner = false;
+let db = null, results = [], localMode = true;
 function readLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
 function writeLocal(list) { try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch (e) {} }
 const sorted = () => results.slice().sort((a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt);
@@ -277,15 +302,39 @@ function renderRating() {
   $("ratingCount").textContent = list.length + " " + plural(list.length, "учасник", "учасники", "учасників");
   const place = list.findIndex((r) => r.id === state.resultId);
   $("resultPlace").textContent = place >= 0 ? place + 1 + " із " + list.length : "—";
-  $("clearBtn").hidden = !(localMode || isOwner) || list.length === 0;
+}
+/* Firebase (Firestore) для версії поза Claude: налаштування в js/firebase-config.js.
+   API Firestore (collection/doc/set/onSnapshot) збігається з базою артефакту, тож решта коду спільна. */
+const FIREBASE_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.append(s);
+  });
+}
+async function initFirebase() {
+  const cfg = window.BL && BL.firebaseConfig;
+  if (!cfg || !cfg.apiKey || !cfg.projectId) return null;
+  try {
+    if (!window.firebase) {
+      await loadScript(FIREBASE_SDK + "firebase-app-compat.js");
+      await loadScript(FIREBASE_SDK + "firebase-firestore-compat.js");
+    }
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    return firebase.firestore();
+  } catch (e) {
+    console.warn("Firebase недоступний, рейтинг зберігається в цьому браузері", e);
+    return null;
+  }
 }
 async function initStore() {
   const note = (t) => { $("storeNote").textContent = t; renderRating(); };
   results = readLocal();
   note("Рейтинг цього браузера.");
   try { db = await window.claude?.use?.("db"); } catch (e) { db = null; }
+  if (!db) db = await initFirebase(); // версія на GitHub Pages: спільний рейтинг через Firestore
   if (!db) { note("Загальний рейтинг недоступний, показано результати цього браузера."); return; }
-  try { const user = await window.claude.use("user"); isOwner = (await user?.isOwner()) ?? false; } catch (e) {}
   localMode = false;
   results = [];
   note("Загальний рейтинг усіх учасників.");
@@ -295,20 +344,6 @@ async function initStore() {
     renderRating();
   }, () => { localMode = true; results = readLocal(); note("Загальний рейтинг недоступний, показано результати цього браузера."); });
 }
-let clearArmed = false;
-async function clearRating() {
-  const btn = $("clearBtn");
-  if (!clearArmed) {
-    clearArmed = true; btn.textContent = "Точно очистити? Натисніть ще раз";
-    setTimeout(() => { clearArmed = false; btn.textContent = "Очистити рейтинг"; }, 4000);
-    return;
-  }
-  clearArmed = false; btn.textContent = "Очистити рейтинг";
-  if (localMode) { writeLocal([]); results = []; renderRating(); return; }
-  for (const r of results.slice()) { try { await db.collection("results").doc(r.id).delete(); } catch (e) {} }
-  toast("Рейтинг очищено.");
-}
-
 /* ---------- результат ---------- */
 function grade(s) {
   const p = s / CARDS;
@@ -336,11 +371,15 @@ function finish() {
     bd.append(row);
   });
   $("resultPanel").hidden = false;
+  $("resultGrid").classList.remove("rating-only");
+  document.querySelector("main").classList.remove("rating-only");
   renderRating();
   show("result");
 }
 function openRatingOnly() {
   $("resultPanel").hidden = true;
+  $("resultGrid").classList.add("rating-only");
+  document.querySelector("main").classList.add("rating-only");
   renderRating();
   show("result");
 }
@@ -355,12 +394,12 @@ $("startForm").addEventListener("submit", (e) => {
   startGame(name);
 });
 $("openRatingBtn").addEventListener("click", openRatingOnly);
-$("homeBtn").addEventListener("click", () => { clearInterval(timerId); show("start"); });
+$("homeBtn").addEventListener("click", () => { clearInterval(timerId); show("start"); renderResume(); });
+$("resumeBtn").addEventListener("click", resumeGame);
 $("playAgainBtn").addEventListener("click", () => startGame(state.player));
 $("finishBtn").addEventListener("click", finish);
 $("confirmBtn").addEventListener("click", confirmAnswer);
 $("backBtn").addEventListener("click", closeModal);
-$("clearBtn").addEventListener("click", clearRating);
 document.querySelectorAll("[data-close]").forEach((n) => n.addEventListener("click", closeModal));
 document.addEventListener("keydown", (e) => {
   if ($("modal").hidden) return;
@@ -383,6 +422,8 @@ function boot(saved) {
     $("boardPlayer").textContent = state.player;
     renderBoard(); show("board"); startTimer();
   }
+  try { localStorage.removeItem("businessLab.progress.v1"); } catch (e) {} // прибрати прогрес зі старої версії
+  renderResume();
 }
 window.claude?.hot?.snapshot?.(() => ({ state }));
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
