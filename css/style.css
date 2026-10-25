@@ -26,11 +26,13 @@
   --chart-opacity: .55;
 
   /* кольори кафедр */
-  --d-mkt: #7b3fc4;  /* фіолетовий — Маркетинг та цифрові технології */
-  --d-mgt: #c2185b;  /* малиновий */
-  --d-acc: #2e9e4f;  /* зелений */
-  --d-bus: #f57c00;  /* помаранчевий */
-  --d-econ:#f2b705;  /* жовтий */
+  /* кольори кафедр — як на інфографіці img/kafedry.jpg */
+  --d-mkt: #0253ce;  /* синій — Маркетинг та цифрові технології */
+  --d-mgt: #f21e6e;  /* малиново-рожевий — Менеджмент та адміністрування */
+  --d-acc: #129f43;  /* зелений — Облік та фінанси */
+  --d-bus: #fd7614;  /* помаранчевий — Бізнес та управління */
+  --d-econ:#fccb15;  /* жовтий — Економіка та митна справа */
+  --brand-blue: #0253ce;  /* «BUSINESS» у логотипі */
   --econ-text: #a87d00;
   --icon-bg: var(--bg-2);
 
@@ -61,11 +63,12 @@
   --shadow: rgba(0, 0, 0, 0.6);
   --chart: #f5b83d;
   --chart-opacity: .45;
-  --d-mkt: #9b6bff;
-  --d-mgt: #e0457b;
-  --d-acc: #34c76f;
-  --d-bus: #ff9a3c;
-  --d-econ:#f5c542;
+  --d-mkt: #3d7dff;
+  --d-mgt: #ff4d8d;
+  --d-acc: #2fc766;
+  --d-bus: #ff8a3d;
+  --d-econ:#ffd43b;
+  --brand-blue: #4d8dff;
   --econ-text: #f5c542;
 }
 * { box-sizing: border-box; }
@@ -147,8 +150,8 @@ a.brand, a.brand:link, a.brand:visited, a.brand:hover, a.brand:active { color: i
 .brand-mark i:nth-child(1) { height: 55%; }
 .brand-mark i:nth-child(2) { height: 100%; }
 .brand-mark i:nth-child(3) { height: 40%; opacity: .6; }
-.brand-name { font-family: var(--font-display); font-weight: 900; letter-spacing: .03em; font-size: 28px; line-height: 1.05; white-space: nowrap; }
-.brand-name span { color: var(--accent-text); margin-left: 4px; }
+.brand-name { font-family: var(--font-display); font-weight: 900; letter-spacing: .03em; font-size: 28px; line-height: 1.05; white-space: nowrap; color: var(--brand-blue); }
+.brand-name span { color: var(--accent); margin-left: 4px; }
 .brand-sub { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; margin-top: 3px; white-space: nowrap; }
 
 /* ---------- екрани ---------- */
