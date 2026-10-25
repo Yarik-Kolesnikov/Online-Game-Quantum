@@ -394,7 +394,15 @@ $("startForm").addEventListener("submit", (e) => {
   startGame(name);
 });
 $("openRatingBtn").addEventListener("click", openRatingOnly);
-$("homeBtn").addEventListener("click", () => { clearInterval(timerId); show("start"); renderResume(); });
+function goHome() { clearInterval(timerId); show("start"); renderResume(); }
+$("homeBtn").addEventListener("click", goHome);
+// логотип у шапці теж веде на головну (без перезавантаження, незавершена гра зберігається)
+$("brandLink").addEventListener("click", (e) => {
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; // відкриття в новій вкладці працює як звичайне посилання
+  e.preventDefault();
+  if ($("modal") && !$("modal").hidden) closeModal();
+  goHome();
+});
 $("resumeBtn").addEventListener("click", resumeGame);
 $("playAgainBtn").addEventListener("click", () => startGame(state.player));
 $("finishBtn").addEventListener("click", finish);

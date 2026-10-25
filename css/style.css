@@ -84,7 +84,13 @@ body {
   font-size: 15px;
   line-height: 1.5;
   overflow-x: hidden;
+  /* текст на сторінці не виділяється (крім полів вводу) */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
+input, textarea { -webkit-user-select: text; user-select: text; }
+img, svg { -webkit-user-drag: none; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
 button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -134,7 +140,8 @@ button { font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-
 .theme-btn svg { width: 16px; height: 16px; }
 @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-.brand { display: flex; align-items: center; gap: 14px; flex-shrink: 0; text-align: left; }
+.brand { display: flex; align-items: center; gap: 14px; flex-shrink: 0; text-align: left; color: inherit; text-decoration: none; border-radius: 12px; cursor: pointer; transition: opacity .2s; }
+.brand:hover { opacity: .85; }
 .brand-mark { display: flex; align-items: flex-end; gap: 4px; height: 36px; }
 .brand-mark i { display: block; width: 8px; background: var(--accent); border-radius: 2px; }
 .brand-mark i:nth-child(1) { height: 55%; }
