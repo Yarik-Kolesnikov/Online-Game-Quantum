@@ -26,11 +26,10 @@
   --chart-opacity: .55;
 
   /* кольори кафедр */
-  --d-mkt: #1e9fe0;  /* блакитний */
+  --d-mkt: #7b3fc4;  /* фіолетовий — Маркетинг та цифрові технології */
   --d-mgt: #c2185b;  /* малиновий */
   --d-acc: #2e9e4f;  /* зелений */
   --d-bus: #f57c00;  /* помаранчевий */
-  --d-it:  #7b3fc4;  /* фіолетовий */
   --d-econ:#f2b705;  /* жовтий */
   --econ-text: #a87d00;
   --icon-bg: var(--bg-2);
@@ -62,11 +61,10 @@
   --shadow: rgba(0, 0, 0, 0.6);
   --chart: #f5b83d;
   --chart-opacity: .45;
-  --d-mkt: #38bdf8;
+  --d-mkt: #9b6bff;
   --d-mgt: #e0457b;
   --d-acc: #34c76f;
   --d-bus: #ff9a3c;
-  --d-it:  #9b6bff;
   --d-econ:#f5c542;
   --econ-text: #f5c542;
 }

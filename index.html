@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>BUSINESS LAB</title>
-  <meta name="description" content="Навчальна онлайн-гра: 10 карток, 6 кафедр, 3 варіанти відповіді, рейтинг студентів.">
+  <meta name="description" content="Навчальна онлайн-гра: 10 карток, 5 кафедр, 3 варіанти відповіді, рейтинг студентів.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261025b">
+  <link rel="stylesheet" href="css/style.css?v=20261025c">
   <style>body { margin: 0; }</style>
 </head>
 <body>
@@ -44,14 +44,14 @@
         <!-- Інфографіка кафедр: img/kafedry.jpg (світла тема) і img/kafedry-dark.jpg (темна тема) -->
         <figure class="dept-figure">
           <!-- світла тема -->
-          <img class="fig-light" src="img/kafedry.jpg" width="1448" height="1086"
-               alt="Шість кафедр факультету: Облік та фінанси; Маркетинг та логістика; Бізнес та управління; Менеджмент та адміністрування; Економіка та митна справа; Цифрові технології в бізнесі та економіці">
+          <img class="fig-light" src="img/kafedry.jpg?v=20261025c" width="1536" height="1024"
+               alt="П'ять кафедр факультету: Маркетинг та цифрові технології — ідеї, бренди, комунікації, цифрові інструменти та інновації; Облік та фінанси — фінанси, облік, аудит, економічна аналітика, стабільне майбутнє; Економіка та митна справа — економічні процеси, міжнародна торгівля, митна діяльність; Бізнес та управління — стратегія, розвиток, підприємництво, успішні проєкти; Менеджмент та адміністрування — люди, процеси, ефективні рішення, лідерство.">
           <!-- темна тема (вмикається разом із кнопкою «Темна») -->
-          <img class="fig-dark" src="img/kafedry-dark.jpg" width="1448" height="1086" alt="" aria-hidden="true">
+          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261025c" width="1536" height="1024" alt="" aria-hidden="true">
         </figure>
         <div class="stats">
           <div><b id="statQ">60</b><span>питань у банку</span></div>
-          <div><b>6</b><span>кафедр</span></div>
+          <div><b>5</b><span>кафедр</span></div>
           <div><b>10</b><span>карток у грі</span></div>
         </div>
       </div>
@@ -168,14 +168,13 @@
 <div class="toast" id="toast" hidden></div>
 
   <!-- Порядок важливий: налаштування → питання → логіка гри -->
-  <script src="js/config.js?v=20261025b"></script>
-  <script src="js/questions/marketing-logistics.js?v=20261025b"></script>
-  <script src="js/questions/management-administration.js?v=20261025b"></script>
-  <script src="js/questions/accounting-finance.js?v=20261025b"></script>
-  <script src="js/questions/business-management.js?v=20261025b"></script>
-  <script src="js/questions/digital-technologies.js?v=20261025b"></script>
-  <script src="js/questions/economics-customs.js?v=20261025b"></script>
-  <script src="js/firebase-config.js?v=20261025b"></script>
-  <script src="js/app.js?v=20261025b"></script>
+  <script src="js/config.js?v=20261025c"></script>
+  <script src="js/questions/marketing-digital.js?v=20261025c"></script>
+  <script src="js/questions/management-administration.js?v=20261025c"></script>
+  <script src="js/questions/accounting-finance.js?v=20261025c"></script>
+  <script src="js/questions/business-management.js?v=20261025c"></script>
+  <script src="js/questions/economics-customs.js?v=20261025c"></script>
+  <script src="js/firebase-config.js?v=20261025c"></script>
+  <script src="js/app.js?v=20261025c"></script>
 </body>
 </html>
