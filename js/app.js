@@ -30,7 +30,7 @@ const fmt = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return pad(M
 const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 10 || b >= 20) ? few : many; };
 function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 3500); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), Math.max(3500, msg.length * 55)); }
 function sparkPath() {
   let y = 20 + Math.random() * 10, d = "M0 " + y.toFixed(1);
   for (let x = 10; x <= 100; x += 10) { y = Math.min(28, Math.max(2, y + (Math.random() - 0.55) * 12)); d += " L" + x + " " + y.toFixed(1); }

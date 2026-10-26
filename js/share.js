@@ -2,9 +2,8 @@
    share.js — «Поділитися результатом»
    Після гри генерує картинку-картку з результатом (1080×1350, підходить для
    Instagram і сторіс) і дає поділитися нею або текстом:
-   - Telegram і Facebook — через їхні сторінки «поділитися»;
-   - Instagram і TikTok — на телефоні системне меню з картинкою, на ПК картинка
-     завантажується, текст копіюється й відкривається сайт соцмережі;
+   - Telegram, Instagram, TikTok, Facebook: картинка + короткий текст із посиланням і хештегами
+     (деталі — біля функції phoneShare);
    - завантажити картинку; скопіювати текст.
    Підключається ПІСЛЯ app.js і бере з нього state, DEPTS, ORDER, QUESTIONS, grade, fmt, toast, $.
    ========================================================================= */
@@ -35,37 +34,13 @@
       const own = state.cards.filter((c) => QUESTIONS[c.qi].dept === k);
       return { k, d: DEPTS[k], ok: own.filter((c) => c.ok).length, n: own.length };
     }).filter((x) => x.n > 0);
-    const ms = state.finishedAt - state.startedAt;
-    return { name: state.player, s, title, time: fmt(ms), timeWords: timeWords(ms), place: place && place !== "—" ? place : "", depts };
+    return { name: state.player, s, title, time: fmt(state.finishedAt - state.startedAt), place: place && place !== "—" ? place : "", depts };
   }
-  // 1 секунда, 2 секунди, 5 секунд; 1 хвилина, 2 хвилини, 5 хвилин
-  function plural(n, one, few, many) {
-    const a = n % 10, b = n % 100;
-    if (a === 1 && b !== 11) return one;
-    if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few;
-    return many;
-  }
-  function timeWords(ms) {
-    const total = Math.max(1, Math.round(ms / 1000));
-    const m = Math.floor(total / 60), sec = total % 60;
-    const parts = [];
-    if (m) parts.push(m + " " + plural(m, "хвилина", "хвилини", "хвилин"));
-    if (sec || !m) parts.push(sec + " " + plural(sec, "секунда", "секунди", "секунд"));
-    return parts.join(" ");
-  }
+  // Текст під картинкою. Сам результат (бали, місце, час) уже є на картинці.
   function shareText(r, withUrl = true) {
-    const lines = [
-      "Мій результат у BUSINESS LAB — «" + r.title + "»!",
-      "💡 " + r.s + "/10 правильних відповідей"
-    ];
-    if (r.place) lines.push("🏆 Місце в рейтингу: " + r.place);
-    lines.push(
-      "⏱️ Час проходження: " + r.timeWords,
-      "Бізнес — це вміння мислити, аналізувати та приймати рішення! 📊 А кожна спроба — це можливість дізнатися щось нове й покращити свій результат.",
-      "🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"
-    );
+    const lines = ["🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"];
     if (withUrl) lines.push("🔗 " + siteUrl());
-    lines.push("#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
+    lines.push("", "#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
     return lines.join("\n");
   }
 
@@ -234,10 +209,6 @@
     if (!state.finishedAt) { toast("Спочатку завершіть гру."); return; }
     const r = resultData();
     lastText = shareText(r);
-    const url = siteUrl();
-    // Telegram вставляє параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
-    $("shareTg").href = "https://t.me/share/url?url=" + encodeURIComponent(lastText);
-    $("shareFb").href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
     $("shareTextPreview").textContent = lastText;
 
     modal().hidden = false;
@@ -292,37 +263,54 @@
   async function copyText() {
     toast(await writeClipboard(lastText) ? "Текст скопійовано — встав його в повідомлення чи допис." : "Не вдалося скопіювати текст.");
   }
-  // Instagram і TikTok не мають посилання «поділитися», тому:
-  // на телефоні — системне меню з картинкою (там є Instagram/TikTok, сторіс, допис);
-  // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сайт соцмережі.
-  function shareToApp(name, webUrl) {
+  async function copyImage() {
+    try {
+      if (!lastBlob || !window.ClipboardItem || !navigator.clipboard?.write) return false;
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": lastBlob })]);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* Як потрапляє картинка в соцмережу:
+     - телефон: системне меню «Поділитися» з картинкою й текстом, обираєш Telegram / Instagram / TikTok / Facebook;
+     - комп'ютер: соцмережі не дають сайту прикріпити картинку посиланням, тому
+       Telegram — картинка копіюється в буфер, відкривається Telegram із текстом, у чаті Ctrl+V;
+       Instagram, TikTok, Facebook — картинка завантажується, текст копіюється, відкривається сайт соцмережі. */
+  const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+  function phoneShare() {
     const file = imageFile();
-    const canFiles = file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
-    writeClipboard(lastText); // текст під рукою, щоб вставити в підпис
-    if (canFiles) {
-      navigator.share({ files: [file], text: lastText }).catch((e) => {
-        if (e && e.name !== "AbortError") { saveImage(); toast("Картинку збережено, текст скопійовано — додай їх у " + name + "."); }
-      });
-      return;
-    }
+    if (!isPhone || !file || !navigator.share || !navigator.canShare || !navigator.canShare({ files: [file] })) return false;
+    writeClipboard(lastText); // якщо застосунок не підхопить текст — його можна вставити
+    navigator.share({ files: [file], text: lastText }).catch((e) => {
+      if (e && e.name !== "AbortError") { saveImage(); toast("Картинку збережено, текст скопійовано — додай їх у допис."); }
+    });
+    return true;
+  }
+  async function shareTelegram() {
+    if (phoneShare()) return;
+    const copied = await copyImage();
+    if (!copied) saveImage();
+    // Telegram ставить параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
+    openLink("https://t.me/share/url?url=" + encodeURIComponent(lastText));
+    toast(copied ? "Картинку скопійовано: у Telegram обери чат і натисни Ctrl+V — вона додасться до тексту."
+                 : "Картинку збережено: у Telegram обери чат і прикріпи її до тексту.");
+  }
+  function shareToApp(name, webUrl) {
+    if (phoneShare()) return;
+    writeClipboard(lastText);
     saveImage();
-    toast("Картинку збережено, текст скопійовано — додай їх у " + name + ".");
-    window.open(webUrl, "_blank", "noopener");
+    openLink(webUrl);
+    toast("Картинку збережено, текст скопійовано — створи допис у " + name + ", додай картинку й встав текст.");
   }
 
   /* ---------- події ---------- */
   $("shareBtn").addEventListener("click", openShare);
+  $("shareTg").addEventListener("click", (e) => { e.preventDefault(); shareTelegram(); });
   $("shareIg").addEventListener("click", () => shareToApp("Instagram", "https://www.instagram.com/"));
   $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload"));
+  $("shareFb").addEventListener("click", (e) => { e.preventDefault(); shareToApp("Facebook", "https://www.facebook.com/"); });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
-  $("shareTg").addEventListener("click", (e) => { e.preventDefault(); openLink($("shareTg").href); });
-  // Facebook бере з посилання лише адресу сайту, тож текст копіюємо — його можна вставити в допис
-  $("shareFb").addEventListener("click", (e) => {
-    e.preventDefault();
-    writeClipboard(lastText).then((ok) => { if (ok) toast("Текст скопійовано — встав його в допис."); });
-    openLink($("shareFb").href);
-  });
   document.querySelectorAll("[data-share-close]").forEach((n) => n.addEventListener("click", closeShare));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeShare(); });
 
