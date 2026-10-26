@@ -264,7 +264,8 @@ function readLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "
 function writeLocal(list) { try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch (e) {} }
 /* Одна людина = один рядок у рейтингу. Однаковим вважаємо ПІБ без різниці у великих/малих літерах,
    порядку слів, зайвих пробілах, крапках і виді апострофа: «Ярослав Колесников» = «колесников ЯРОСЛАВ».
-   Якщо людина пройшла гру ще раз, у рейтингу лишається тільки її НОВІШИЙ результат. */
+   Якщо людина пройшла гру ще раз, у рейтингу лишається її НАЙКРАЩИЙ результат:
+   більше балів, а за рівних балів — швидший час (за повної рівності — давніший). */
 function personKey(name) {
   return String(name || "").toLocaleLowerCase("uk")
     .replace(/[’ʼ‘`´]/g, "'")
@@ -274,9 +275,12 @@ function latestPerPerson(list) {
   const byPerson = new Map();
   list.forEach((r) => {
     const k = personKey(r.name), prev = byPerson.get(k);
-    if (!prev || (r.finishedAt || 0) >= (prev.finishedAt || 0)) byPerson.set(k, r);
+    if (!prev || better(r, prev) > 0) byPerson.set(k, r);
   });
   return [...byPerson.values()];
+}
+function better(a, b) {
+  return (a.score | 0) - (b.score | 0) || (b.timeMs || 0) - (a.timeMs || 0) || (b.finishedAt || 0) - (a.finishedAt || 0);
 }
 const sorted = () => latestPerPerson(results).sort((a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt);
 
@@ -294,18 +298,22 @@ async function saveResult() {
       toast(e && e.code === "quota_exceeded" ? "Рейтинг переповнений, результат збережено лише на цьому пристрої." : "Немає права запису в загальний рейтинг, результат збережено на цьому пристрої.");
     }
   }
-  // у сховищі цього браузера старий результат тієї ж людини видаляємо зовсім
-  const key = personKey(rec.name);
-  const list = readLocal().filter((r) => personKey(r.name) !== key); list.push({ id, ...rec }); writeLocal(list);
+  // у сховищі цього браузера для кожної людини зберігаємо лише найкращий результат
+  const key = personKey(rec.name), all = readLocal();
+  const prev = all.find((r) => personKey(r.name) === key);
+  const list = prev && better({ ...rec, finishedAt: 0 }, prev) <= 0 ? all : all.filter((r) => personKey(r.name) !== key).concat({ id, ...rec });
+  writeLocal(list);
   if (localMode) results = list; else results.push({ id, ...rec, localOnly: true });
   renderRating();
 }
+// «моїм» вважається рядок цієї людини (там може бути її кращий попередній результат)
+const isMine = (r) => !!state.resultId && personKey(r.name) === personKey(state.player);
 function renderRating() {
   const list = sorted();
   const body = $("ratingBody");
   body.textContent = "";
   list.forEach((r, i) => {
-    const place = i + 1, isMe = r.id === state.resultId;
+    const place = i + 1, isMe = isMine(r);
     const tr = el("tr", isMe ? "me" : "");
     const td1 = el("td"); td1.append(el("span", "place" + (place <= 3 ? " p" + place : ""), String(place)));
     const td2 = el("td", "name", String(r.name || "Без імені").slice(0, 48));
@@ -315,7 +323,7 @@ function renderRating() {
   });
   $("ratingEmpty").hidden = list.length > 0;
   $("ratingCount").textContent = list.length + " " + plural(list.length, "учасник", "учасники", "учасників");
-  const place = list.findIndex((r) => r.id === state.resultId);
+  const place = list.findIndex(isMine);
   $("resultPlace").textContent = place >= 0 ? place + 1 + " із " + list.length : "—";
 }
 /* Firebase (Firestore) для версії поза Claude: налаштування в js/firebase-config.js.
@@ -390,6 +398,11 @@ function finish() {
   document.querySelector("main").classList.remove("rating-only");
   renderRating();
   show("result");
+  // якщо раніше ця людина пройшла краще, у рейтингу лишається попередній результат — повідомляємо
+  const cur = { score: s, timeMs: state.finishedAt - state.startedAt, finishedAt: state.finishedAt };
+  const best = results.filter((r) => r.id !== state.resultId && personKey(r.name) === personKey(state.player))
+    .sort((a, b) => better(b, a))[0];
+  if (best && better(cur, best) <= 0) toast("У рейтингу залишився твій кращий результат: " + (best.score | 0) + " / " + (best.total || CARDS) + ", " + fmt(best.timeMs || 0) + ".");
 }
 function openRatingOnly() {
   $("resultPanel").hidden = true;
