@@ -463,3 +463,18 @@ function boot(saved) {
 }
 window.claude?.hot?.snapshot?.(() => ({ state }));
 window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+
+/* ---------- заставка ---------- */
+(function () {
+  const splash = $("splash");
+  if (!splash) return;
+  const go = () => {
+    if (splash.classList.contains("hide")) return;
+    splash.classList.add("hide");
+    document.body.classList.remove("splash-open");
+    setTimeout(() => { splash.hidden = true; ($("playerName") || document.body).focus?.({ preventScroll: true }); }, 450);
+  };
+  $("splashGo").addEventListener("click", go);
+  $("splashGo2").addEventListener("click", go);
+  document.addEventListener("keydown", (e) => { if (!splash.hidden && (e.key === "Escape" || e.key === "Enter")) go(); });
+})();

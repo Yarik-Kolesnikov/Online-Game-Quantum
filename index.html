@@ -19,10 +19,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261026s">
+  <link rel="stylesheet" href="css/style.css?v=20261026t">
   <style>body { margin: 0; }</style>
 </head>
-<body>
+<body class="splash-open">
+<!-- ===== ЗАСТАВКА: показується при кожному відкритті сайту, клік — перехід до гри ===== -->
+<div class="splash" id="splash" role="dialog" aria-label="BUSINESS LAB — заставка гри">
+  <button class="splash-frame" id="splashGo" type="button" aria-label="Перейти до гри">
+    <picture>
+      <source media="(max-width: 1000px)" srcset="img/splash-960.jpg?v=20261026t">
+      <img src="img/splash.jpg?v=20261026t" width="1671" height="941" alt="BUSINESS LAB. Мисли. Аналізуй. Перемагай. Факультет бізнес-технологій та економіки. Перейти до гри">
+    </picture>
+    <span class="splash-hit" aria-hidden="true"></span>
+  </button>
+  <button class="splash-cta" id="splashGo2" type="button">🎮 Перейти до гри →</button>
+</div>
 <div class="bg-grid" aria-hidden="true"></div>
 <svg class="bg-chart" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
   <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-opacity=".22"></stop><stop offset="1" stop-opacity="0"></stop></linearGradient></defs>
@@ -55,10 +66,10 @@
         <!-- Інфографіка кафедр: img/kafedry.jpg (світла тема) і img/kafedry-dark.jpg (темна тема) -->
         <figure class="dept-figure">
           <!-- світла тема -->
-          <img class="fig-light" src="img/kafedry.jpg?v=20261026s" width="1280" height="853"
+          <img class="fig-light" src="img/kafedry.jpg?v=20261026t" width="1280" height="853"
                alt="П'ять кафедр факультету: Маркетинг та цифрові технології — ідеї, бренди, комунікації, цифрові інструменти та інновації; Облік та фінанси — фінанси, облік, аудит, економічна аналітика, стабільне майбутнє; Економіка та митна справа — економічні процеси, міжнародна торгівля, митна діяльність; Бізнес та управління — стратегія, розвиток, підприємництво, успішні проєкти; Менеджмент та адміністрування — люди, процеси, ефективні рішення, лідерство.">
           <!-- темна тема (вмикається разом із кнопкою «Темна») -->
-          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261026s" width="1280" height="853" alt="" aria-hidden="true">
+          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261026t" width="1280" height="853" alt="" aria-hidden="true">
         </figure>
         <div class="stats">
           <div><b id="statQ">50</b><span>питань у банку</span></div>
@@ -208,14 +219,14 @@
 <div class="toast" id="toast" hidden></div>
 
   <!-- Порядок важливий: налаштування → питання → логіка гри -->
-  <script src="js/config.js?v=20261026s"></script>
-  <script src="js/questions/marketing-digital.js?v=20261026s"></script>
-  <script src="js/questions/management-administration.js?v=20261026s"></script>
-  <script src="js/questions/accounting-finance.js?v=20261026s"></script>
-  <script src="js/questions/business-management.js?v=20261026s"></script>
-  <script src="js/questions/economics-customs.js?v=20261026s"></script>
-  <script src="js/firebase-config.js?v=20261026s"></script>
-  <script src="js/app.js?v=20261026s"></script>
-  <script src="js/share.js?v=20261026s"></script>
+  <script src="js/config.js?v=20261026t"></script>
+  <script src="js/questions/marketing-digital.js?v=20261026t"></script>
+  <script src="js/questions/management-administration.js?v=20261026t"></script>
+  <script src="js/questions/accounting-finance.js?v=20261026t"></script>
+  <script src="js/questions/business-management.js?v=20261026t"></script>
+  <script src="js/questions/economics-customs.js?v=20261026t"></script>
+  <script src="js/firebase-config.js?v=20261026t"></script>
+  <script src="js/app.js?v=20261026t"></script>
+  <script src="js/share.js?v=20261026t"></script>
 </body>
 </html>
