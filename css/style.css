@@ -152,7 +152,7 @@ a.brand, a.brand:link, a.brand:visited, a.brand:hover, a.brand:active { color: i
 .brand-mark i:nth-child(3) { height: 40%; opacity: .6; }
 .brand-name { font-family: var(--font-display); font-weight: 900; letter-spacing: .03em; font-size: 28px; line-height: 1.05; white-space: nowrap; color: var(--brand-blue); }
 .brand-name span { color: var(--accent); margin-left: 4px; }
-.brand-sub { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; margin-top: 3px; white-space: nowrap; }
+.brand-sub { font-size: 12px; font-weight: 800; color: var(--text-2, var(--muted)); letter-spacing: .02em; margin-top: 3px; white-space: nowrap; }
 
 /* ---------- екрани ---------- */
 main {
