@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261025e">
+  <link rel="stylesheet" href="css/style.css?v=20261026a">
   <style>body { margin: 0; }</style>
 </head>
 <body>
@@ -44,10 +44,10 @@
         <!-- Інфографіка кафедр: img/kafedry.jpg (світла тема) і img/kafedry-dark.jpg (темна тема) -->
         <figure class="dept-figure">
           <!-- світла тема -->
-          <img class="fig-light" src="img/kafedry.jpg?v=20261025e" width="1280" height="853"
+          <img class="fig-light" src="img/kafedry.jpg?v=20261026a" width="1280" height="853"
                alt="П'ять кафедр факультету: Маркетинг та цифрові технології — ідеї, бренди, комунікації, цифрові інструменти та інновації; Облік та фінанси — фінанси, облік, аудит, економічна аналітика, стабільне майбутнє; Економіка та митна справа — економічні процеси, міжнародна торгівля, митна діяльність; Бізнес та управління — стратегія, розвиток, підприємництво, успішні проєкти; Менеджмент та адміністрування — люди, процеси, ефективні рішення, лідерство.">
           <!-- темна тема (вмикається разом із кнопкою «Темна») -->
-          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261025e" width="1280" height="853" alt="" aria-hidden="true">
+          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261026a" width="1280" height="853" alt="" aria-hidden="true">
         </figure>
         <div class="stats">
           <div><b id="statQ">50</b><span>питань у банку</span></div>
@@ -122,6 +122,7 @@
         <p class="result-text" id="resultText"></p>
         <div class="result-place"><span>Місце в рейтингу</span><b id="resultPlace">—</b></div>
         <div class="breakdown" id="breakdown"></div>
+        <button class="btn btn-share btn-wide" id="shareBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Поділитися результатом</button>
         <button class="btn btn-primary btn-wide" id="playAgainBtn">Грати ще раз</button>
       </div>
       <div class="panel" id="ratingPanel">
@@ -143,6 +144,35 @@
     </div>
   </section>
 </main>
+
+<!-- ===== ПОДІЛИТИСЯ РЕЗУЛЬТАТОМ ===== -->
+<div class="modal share-modal" id="shareModal" hidden>
+  <div class="modal-backdrop" data-share-close></div>
+  <div class="modal-card share-card" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+    <div class="modal-top">
+      <span class="panel-tag" id="shareTitle">Поділитися результатом</span>
+      <button class="icon-btn" type="button" data-share-close aria-label="Закрити">✕</button>
+    </div>
+    <div class="share-body">
+      <div class="share-preview-wrap loading" id="sharePreviewWrap">
+        <img class="share-preview" id="sharePreview" alt="Картка з моїм результатом у BUSINESS LAB">
+      </div>
+      <div class="share-side">
+        <button class="btn btn-primary btn-wide" id="shareNative" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Поділитися…</button>
+        <div class="share-grid">
+          <a class="share-btn" id="shareTg" href="#" style="--c:#229ed9" target="_blank" rel="noopener"><span class="share-ico">✈</span>Telegram</a>
+          <a class="share-btn" id="shareVb" href="#" style="--c:#7360f2"><span class="share-ico">✆</span>Viber</a>
+          <a class="share-btn" id="shareWa" href="#" style="--c:#25d366" target="_blank" rel="noopener"><span class="share-ico">✉</span>WhatsApp</a>
+          <a class="share-btn" id="shareFb" href="#" style="--c:#1877f2" target="_blank" rel="noopener"><span class="share-ico">f</span>Facebook</a>
+        </div>
+        <button class="btn btn-ghost btn-wide" id="shareDownload" type="button">Завантажити картинку</button>
+        <button class="btn btn-ghost btn-wide" id="shareCopy" type="button">Копіювати текст</button>
+        <p class="share-hint">Для Instagram: завантаж картинку й додай її в допис або сторіс. На телефоні Instagram є в меню «Поділитися…».</p>
+        <p class="share-text mono" id="shareTextPreview"></p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="modal" hidden>
   <div class="modal-backdrop" data-close></div>
@@ -168,13 +198,14 @@
 <div class="toast" id="toast" hidden></div>
 
   <!-- Порядок важливий: налаштування → питання → логіка гри -->
-  <script src="js/config.js?v=20261025e"></script>
-  <script src="js/questions/marketing-digital.js?v=20261025e"></script>
-  <script src="js/questions/management-administration.js?v=20261025e"></script>
-  <script src="js/questions/accounting-finance.js?v=20261025e"></script>
-  <script src="js/questions/business-management.js?v=20261025e"></script>
-  <script src="js/questions/economics-customs.js?v=20261025e"></script>
-  <script src="js/firebase-config.js?v=20261025e"></script>
-  <script src="js/app.js?v=20261025e"></script>
+  <script src="js/config.js?v=20261026a"></script>
+  <script src="js/questions/marketing-digital.js?v=20261026a"></script>
+  <script src="js/questions/management-administration.js?v=20261026a"></script>
+  <script src="js/questions/accounting-finance.js?v=20261026a"></script>
+  <script src="js/questions/business-management.js?v=20261026a"></script>
+  <script src="js/questions/economics-customs.js?v=20261026a"></script>
+  <script src="js/firebase-config.js?v=20261026a"></script>
+  <script src="js/app.js?v=20261026a"></script>
+  <script src="js/share.js?v=20261026a"></script>
 </body>
 </html>
