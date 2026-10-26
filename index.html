@@ -19,21 +19,41 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=20261026t">
+  <link rel="stylesheet" href="css/style.css?v=20261026v">
   <style>body { margin: 0; }</style>
 </head>
 <body class="splash-open">
-<!-- ===== ЗАСТАВКА: показується при кожному відкритті сайту, клік — перехід до гри ===== -->
-<div class="splash" id="splash" role="dialog" aria-label="BUSINESS LAB — заставка гри">
-  <button class="splash-frame" id="splashGo" type="button" aria-label="Перейти до гри">
-    <picture>
-      <source media="(max-width: 1000px)" srcset="img/splash-960.jpg?v=20261026t">
-      <img src="img/splash.jpg?v=20261026t" width="1671" height="941" alt="BUSINESS LAB. Мисли. Аналізуй. Перемагай. Факультет бізнес-технологій та економіки. Перейти до гри">
-    </picture>
-    <span class="splash-hit" aria-hidden="true"></span>
-  </button>
-  <button class="splash-cta" id="splashGo2" type="button">🎮 Перейти до гри →</button>
-</div>
+<!-- ===== ЗАСТАВКА: перша сторінка; кнопка «Перейти до гри» веде на головну (реєстрація) ===== -->
+<section class="splash" id="splash" aria-labelledby="splashTitle">
+  <div class="sp-blob sp-blob-tl" aria-hidden="true"></div>
+  <div class="sp-blob sp-blob-bl" aria-hidden="true"></div>
+  <div class="sp-blob sp-blob-br" aria-hidden="true"></div>
+  <div class="sp-dots sp-dots-tl" aria-hidden="true"></div>
+  <div class="sp-dots sp-dots-br" aria-hidden="true"></div>
+  <img class="sp-deco sp-left" src="img/splash-left.webp?v=20261026v" width="600" height="571" alt="" aria-hidden="true">
+  <img class="sp-deco sp-right" src="img/splash-right.webp?v=20261026v" width="416" height="696" alt="" aria-hidden="true">
+
+  <div class="sp-center">
+    <div class="sp-logo" aria-hidden="true">
+      <i class="sp-ray r1"></i><i class="sp-ray r2"></i><i class="sp-ray r3"></i><i class="sp-ray r4"></i>
+      <span class="sp-bar b1"></span><span class="sp-bar b2"></span><span class="sp-bar b3"></span>
+    </div>
+    <h1 class="sp-title" id="splashTitle"><span class="sp-business">BUSINESS</span> <span class="sp-lab">LAB</span></h1>
+    <p class="sp-tagline">Мисли. Аналізуй. Перемагай.</p>
+    <div class="sp-line" aria-hidden="true"></div>
+    <p class="sp-faculty">Факультет бізнес-технологій та економіки</p>
+    <div class="sp-cta-wrap">
+      <i class="sp-cray l1" aria-hidden="true"></i><i class="sp-cray l2" aria-hidden="true"></i><i class="sp-cray l3" aria-hidden="true"></i>
+      <button class="sp-cta" id="splashGo" type="button">
+        <svg class="sp-pad" viewBox="0 0 48 32" aria-hidden="true"><path fill="#fff" d="M13 2h22c6.6 0 11 5.6 12.2 13.4l.7 5.2c.6 4.5-2.3 8.4-6.4 8.4-2.6 0-4.4-1.6-5.9-3.8L33.7 22H14.3l-1.9 3.2C10.9 27.4 9.1 29 6.5 29 2.4 29-.5 25.1.1 20.6l.7-5.2C2 7.6 6.4 2 13 2z"/><path fill="#0b63e5" d="M12 10h3v4h4v3h-4v4h-3v-4H8v-3h4zM33.5 10.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM38.5 15.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM28.5 15.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM33.5 20.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></svg>
+        <span class="sp-sep" aria-hidden="true"></span>
+        <span class="sp-cta-text">Перейти до гри</span>
+        <svg class="sp-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <i class="sp-cray r1" aria-hidden="true"></i><i class="sp-cray r2" aria-hidden="true"></i><i class="sp-cray r3" aria-hidden="true"></i>
+    </div>
+  </div>
+</section>
 <div class="bg-grid" aria-hidden="true"></div>
 <svg class="bg-chart" viewBox="0 0 1200 400" preserveAspectRatio="none" aria-hidden="true">
   <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-opacity=".22"></stop><stop offset="1" stop-opacity="0"></stop></linearGradient></defs>
@@ -66,10 +86,10 @@
         <!-- Інфографіка кафедр: img/kafedry.jpg (світла тема) і img/kafedry-dark.jpg (темна тема) -->
         <figure class="dept-figure">
           <!-- світла тема -->
-          <img class="fig-light" src="img/kafedry.jpg?v=20261026t" width="1280" height="853"
+          <img class="fig-light" src="img/kafedry.jpg?v=20261026v" width="1280" height="853"
                alt="П'ять кафедр факультету: Маркетинг та цифрові технології — ідеї, бренди, комунікації, цифрові інструменти та інновації; Облік та фінанси — фінанси, облік, аудит, економічна аналітика, стабільне майбутнє; Економіка та митна справа — економічні процеси, міжнародна торгівля, митна діяльність; Бізнес та управління — стратегія, розвиток, підприємництво, успішні проєкти; Менеджмент та адміністрування — люди, процеси, ефективні рішення, лідерство.">
           <!-- темна тема (вмикається разом із кнопкою «Темна») -->
-          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261026t" width="1280" height="853" alt="" aria-hidden="true">
+          <img class="fig-dark" src="img/kafedry-dark.jpg?v=20261026v" width="1280" height="853" alt="" aria-hidden="true">
         </figure>
         <div class="stats">
           <div><b id="statQ">50</b><span>питань у банку</span></div>
@@ -219,14 +239,14 @@
 <div class="toast" id="toast" hidden></div>
 
   <!-- Порядок важливий: налаштування → питання → логіка гри -->
-  <script src="js/config.js?v=20261026t"></script>
-  <script src="js/questions/marketing-digital.js?v=20261026t"></script>
-  <script src="js/questions/management-administration.js?v=20261026t"></script>
-  <script src="js/questions/accounting-finance.js?v=20261026t"></script>
-  <script src="js/questions/business-management.js?v=20261026t"></script>
-  <script src="js/questions/economics-customs.js?v=20261026t"></script>
-  <script src="js/firebase-config.js?v=20261026t"></script>
-  <script src="js/app.js?v=20261026t"></script>
-  <script src="js/share.js?v=20261026t"></script>
+  <script src="js/config.js?v=20261026v"></script>
+  <script src="js/questions/marketing-digital.js?v=20261026v"></script>
+  <script src="js/questions/management-administration.js?v=20261026v"></script>
+  <script src="js/questions/accounting-finance.js?v=20261026v"></script>
+  <script src="js/questions/business-management.js?v=20261026v"></script>
+  <script src="js/questions/economics-customs.js?v=20261026v"></script>
+  <script src="js/firebase-config.js?v=20261026v"></script>
+  <script src="js/app.js?v=20261026v"></script>
+  <script src="js/share.js?v=20261026v"></script>
 </body>
 </html>
