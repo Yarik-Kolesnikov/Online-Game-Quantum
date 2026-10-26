@@ -181,8 +181,7 @@ def render(r):
         y += step
 
     d.line([(X(px), X(cy + ch - 78)), (X(cx + cw - 34), X(cy + ch - 78))], fill="#eceef1", width=X(2))
-    d.text((X(cx + cw / 2), X(cy + ch - 46)), "А який результат буде у тебе?", font=font(MAN_XB, X(21)), fill=TEXT, anchor="ms")
-    d.text((X(cx + cw / 2), X(cy + ch - 20)), "Перевір себе в BUSINESS LAB →", font=font(MAN_SB, X(18)), fill=BLUE, anchor="ms")
+    d.text((X(cx + cw / 2), X(cy + ch - 30)), "А який результат буде у тебе?", font=font(MAN_XB, X(22)), fill=TEXT, anchor="ms")
 
     img = img.resize((W, H), Image.LANCZOS)
     buf = io.BytesIO()
