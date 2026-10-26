@@ -282,12 +282,21 @@ function latestPerPerson(list) {
 function better(a, b) {
   return (a.score | 0) - (b.score | 0) || (b.timeMs || 0) - (a.timeMs || 0) || (b.finishedAt || 0) - (a.finishedAt || 0);
 }
-const sorted = () => latestPerPerson(results).sort((a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt);
+const byRank = (a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt;
+const sorted = () => latestPerPerson(results).sort(byRank);
+/* Рейтинг — лише ТОП-100. Результат, що не потрапляє в топ-100, у базу не записується:
+   гравець бачить його й може поділитися, але після виходу зі сторінки він зникає. */
+const TOP = 100;
 
 async function saveResult() {
   const rec = { name: state.player, score: score(), total: CARDS, timeMs: state.finishedAt - state.startedAt, finishedAt: state.finishedAt };
   const id = "r" + state.finishedAt.toString(36) + Math.random().toString(36).slice(2, 8);
   state.resultId = id;
+  state.outOfTop = false; state.myRec = { id, ...rec };
+  // де опиниться цей результат (одна людина — один, найкращий, рядок)
+  const pos = latestPerPerson(results.concat(state.myRec)).sort(byRank).findIndex((r) => r.id === id);
+  if (pos === -1) { renderRating(); return; }              // у цієї людини вже є кращий результат — нічого не пишемо
+  if (pos >= TOP) { state.outOfTop = true; renderRating(); return; } // не в топ-100 — не зберігаємо
   if (db && !localMode) {
     try {
       await db.collection("results").doc(id).set(rec);
@@ -301,7 +310,8 @@ async function saveResult() {
   // у сховищі цього браузера для кожної людини зберігаємо лише найкращий результат
   const key = personKey(rec.name), all = readLocal();
   const prev = all.find((r) => personKey(r.name) === key);
-  const list = prev && better({ ...rec, finishedAt: 0 }, prev) <= 0 ? all : all.filter((r) => personKey(r.name) !== key).concat({ id, ...rec });
+  let list = prev && better({ ...rec, finishedAt: 0 }, prev) <= 0 ? all : all.filter((r) => personKey(r.name) !== key).concat({ id, ...rec });
+  list = latestPerPerson(list).sort(byRank).slice(0, TOP); // у браузері теж тримаємо лише топ-100
   writeLocal(list);
   if (localMode) results = list; else results.push({ id, ...rec, localOnly: true });
   renderRating();
@@ -309,7 +319,7 @@ async function saveResult() {
 // «моїм» вважається рядок цієї людини (там може бути її кращий попередній результат)
 const isMine = (r) => !!state.resultId && personKey(r.name) === personKey(state.player);
 function renderRating() {
-  const list = sorted();
+  const all = sorted(), list = all.slice(0, TOP);
   const body = $("ratingBody");
   body.textContent = "";
   list.forEach((r, i) => {
@@ -322,9 +332,20 @@ function renderRating() {
     body.append(tr);
   });
   $("ratingEmpty").hidden = list.length > 0;
-  $("ratingCount").textContent = list.length + " " + plural(list.length, "учасник", "учасники", "учасників");
-  const place = list.findIndex(isMine);
-  $("resultPlace").textContent = place >= 0 ? place + 1 + " із " + list.length : "—";
+  $("ratingCount").textContent = all.length > TOP ? "ТОП-" + TOP : list.length + " " + plural(list.length, "учасник", "учасники", "учасників");
+  // мій рядок: у топ-100 — місце; ні — окрема плашка під таблицею
+  const myIdx = all.findIndex(isMine);
+  const outRec = state.outOfTop ? state.myRec : (myIdx >= TOP ? all[myIdx] : null);
+  const out = $("ratingOut");
+  if (outRec && list.length) {
+    const last = list[list.length - 1];
+    out.textContent = "";
+    out.append(el("b", "", "Твій результат: " + (outRec.score | 0) + " / " + CARDS + " за " + fmt(outRec.timeMs || 0) + " — не увійшов до ТОП-" + TOP + "."),
+      el("span", "", " Цей результат не зберігається в рейтингу й зникне, коли ти вийдеш зі сторінки. Щоб потрапити в рейтинг, потрібно більше ніж " +
+        (last.score | 0) + " / " + CARDS + " або " + (last.score | 0) + " / " + CARDS + " швидше за " + fmt(last.timeMs || 0) + ". Спробуй ще раз!"));
+    out.hidden = false;
+  } else out.hidden = true;
+  $("resultPlace").textContent = outRec ? "поза ТОП-" + TOP : myIdx >= 0 ? myIdx + 1 + " із " + Math.min(all.length, TOP) : "—";
 }
 /* Firebase (Firestore) для версії поза Claude: налаштування в js/firebase-config.js.
    API Firestore (collection/doc/set/onSnapshot) збігається з базою артефакту, тож решта коду спільна. */
@@ -402,7 +423,8 @@ function finish() {
   const cur = { score: s, timeMs: state.finishedAt - state.startedAt, finishedAt: state.finishedAt };
   const best = results.filter((r) => r.id !== state.resultId && personKey(r.name) === personKey(state.player))
     .sort((a, b) => better(b, a))[0];
-  if (best && better(cur, best) <= 0) toast("У рейтингу залишився твій кращий результат: " + (best.score | 0) + " / " + (best.total || CARDS) + ", " + fmt(best.timeMs || 0) + ".");
+  if (state.outOfTop) toast("Цього разу до ТОП-" + TOP + " не вистачило — результат не збережено в рейтингу.");
+  else if (best && better(cur, best) <= 0) toast("У рейтингу залишився твій кращий результат: " + (best.score | 0) + " / " + (best.total || CARDS) + ", " + fmt(best.timeMs || 0) + ".");
 }
 function openRatingOnly() {
   $("resultPanel").hidden = true;
