@@ -39,6 +39,7 @@
     }).filter((x) => x.n > 0);
     return { name: state.player, s, title, time: fmt(state.finishedAt - state.startedAt), place: place && place !== "—" ? place : "", depts };
   }
+  const HASHTAGS = "#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай";
   function b64url(str) {
     let bin = "";
     new TextEncoder().encode(str).forEach((b) => (bin += String.fromCharCode(b)));
@@ -59,7 +60,7 @@
   function shareText(r, withUrl = true) {
     const lines = ["🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"];
     if (withUrl) lines.push("🔗 " + resultLink(r));
-    lines.push("#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
+    lines.push(HASHTAGS);
     return lines.join("\n");
   }
 
@@ -348,11 +349,12 @@
     e.preventDefault();
     if (phoneShare()) return;
     // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
-    writeClipboard(lastText);
+    // Текст допису Facebook приймає через параметр hashtag (без емодзі — він їх псує).
+    // Посилання окремо не пишемо: його показує прев'ю з картинкою результату.
+    const fbText = "А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!\n" + HASHTAGS;
     openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())) +
-      "&hashtag=" + encodeURIComponent("#BusinessLab") + "&quote=" + encodeURIComponent(lastText));
-    steps([SHARE_SERVER ? "Картинка з результатом підтягнеться сама." : "Посилання на гру вже в дописі.",
-      "Facebook не дозволяє сайтам вставляти текст — він скопійований, встав його (" + PASTE + ") і опублікуй."]);
+      "&hashtag=" + encodeURIComponent(fbText));
+    steps(["Текст, хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
   });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
