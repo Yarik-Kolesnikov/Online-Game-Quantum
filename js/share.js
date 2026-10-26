@@ -210,14 +210,6 @@
       ry += rowH;
     });
 
-    // підвал: заклик і адреса
-    ctx.font = "600 30px " + FONT_B; ctx.fillStyle = C.muted; ctx.textAlign = "center";
-    ctx.fillText("Перевір себе — пройди тест:", W / 2, 1132);
-    const host = siteUrl().replace(/^https?:\/\//, "").replace(/\/$/, "");
-    fitFont(ctx, host, "800", 34, FONT_B, W - 120, 20);
-    ctx.fillStyle = C.blue; ctx.fillText(host, W / 2, 1180);
-    ctx.textAlign = "left";
-
     return new Promise((res) => cv.toBlob((b) => res(b), "image/png"));
   }
 
