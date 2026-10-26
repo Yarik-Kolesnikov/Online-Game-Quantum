@@ -11,6 +11,9 @@
   "use strict";
 
   const SITE_URL = "https://yarik-kolesnikov.github.io/Online-Game-Quantum/";
+  // Сервер картинок результату (папка api/, хостинг Vercel). Посилання <SHARE_SERVER>/r?… у Telegram
+  // та Facebook показує прев'ю з картинкою результату й веде на гру. Порожньо — ділимося адресою гри.
+  const SHARE_SERVER = "";
   const W = 1080, H = 1350;
   const C = {
     bg: "#ffffff", text: "#12151b", muted: "#6b7280", line: "rgba(17, 22, 32, 0.12)",
@@ -36,10 +39,25 @@
     }).filter((x) => x.n > 0);
     return { name: state.player, s, title, time: fmt(state.finishedAt - state.startedAt), place: place && place !== "—" ? place : "", depts };
   }
+  function b64url(str) {
+    let bin = "";
+    new TextEncoder().encode(str).forEach((b) => (bin += String.fromCharCode(b)));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  // посилання з результатом: прев'ю = картинка результату, клік — перехід на гру
+  function resultLink(r) {
+    if (!SHARE_SERVER) return siteUrl();
+    const q = ["s=" + r.s, "t=" + Math.round((state.finishedAt - state.startedAt) / 1000)];
+    const m = /^(\d+) із (\d+)$/.exec(r.place);
+    if (m) q.push("p=" + m[1] + "-" + m[2]);
+    q.push("d=" + ORDER.map((k) => { const x = r.depts.find((y) => y.k === k); return x ? Math.min(9, x.ok) + "" + Math.min(9, x.n) : "00"; }).join(""));
+    q.push("u=" + b64url(r.name));
+    return SHARE_SERVER.replace(/\/$/, "") + "/r?" + q.join("&");
+  }
   // Текст під картинкою. Сам результат (бали, місце, час) уже є на картинці.
   function shareText(r, withUrl = true) {
     const lines = ["🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"];
-    if (withUrl) lines.push("🔗 " + siteUrl());
+    if (withUrl) lines.push("🔗 " + resultLink(r));
     lines.push("#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
     return lines.join("\n");
   }
@@ -297,6 +315,11 @@
   }
   async function shareTelegram() {
     if (phoneShare()) return;
+    if (SHARE_SERVER) { // прев'ю посилання саме покаже картинку результату
+      openLink("https://t.me/share/url?url=" + encodeURIComponent(lastText));
+      steps(["Обери чат у Telegram і надішли.", "Картинка з результатом з'явиться сама — у прев'ю посилання."]);
+      return;
+    }
     const copied = await copyImage();
     if (!copied) saveImage();
     // Telegram ставить параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
@@ -318,7 +341,17 @@
   $("shareTg").addEventListener("click", (e) => { e.preventDefault(); shareTelegram(); });
   $("shareIg").addEventListener("click", () => shareToApp("Instagram", "https://www.instagram.com/"));
   $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload"));
-  $("shareFb").addEventListener("click", (e) => { e.preventDefault(); shareToApp("Facebook", "https://www.facebook.com/"); });
+  $("shareFb").addEventListener("click", (e) => {
+    e.preventDefault();
+    if (phoneShare()) return;
+    if (SHARE_SERVER) { // Facebook сам підтягне картинку результату з посилання
+      writeClipboard(lastText);
+      openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())));
+      steps(["Картинка з результатом підтягнеться сама.", "Текст скопійовано — встав його в допис (" + PASTE + ") і опублікуй."]);
+      return;
+    }
+    shareToApp("Facebook", "https://www.facebook.com/");
+  });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
   document.querySelectorAll("[data-share-close]").forEach((n) => n.addEventListener("click", closeShare));

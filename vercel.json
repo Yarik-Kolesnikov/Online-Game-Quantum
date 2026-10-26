@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/share.py": { "includeFiles": "fonts/**", "maxDuration": 10 }
+  },
+  "rewrites": [
+    { "source": "/r", "destination": "/api/share" },
+    { "source": "/card", "destination": "/api/share?img=1" }
+  ]
+}
