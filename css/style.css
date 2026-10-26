@@ -437,6 +437,9 @@ main.rating-only .home-btn { position: absolute; z-index: 2; top: 40px; left: ma
 .share-btn:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 8%, var(--panel-solid)); transform: translateY(-1px); }
 .share-btn:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
 .share-ico { width: 36px; height: 36px; flex-shrink: 0; display: block; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .14)); }
+.share-steps { margin: 0; padding: 12px 14px 12px 34px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 14%, var(--panel-solid)); font-size: 14px; line-height: 1.5; color: var(--text); }
+.share-steps li + li { margin-top: 4px; }
+.share-steps li:first-child { font-weight: 700; }
 .share-text { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--bg-2); font-size: 12px; line-height: 1.5; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 700px) {
   .share-body { grid-template-columns: minmax(0, 1fr); }

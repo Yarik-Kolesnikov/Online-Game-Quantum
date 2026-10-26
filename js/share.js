@@ -40,7 +40,7 @@
   function shareText(r, withUrl = true) {
     const lines = ["🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"];
     if (withUrl) lines.push("🔗 " + siteUrl());
-    lines.push("", "#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
+    lines.push("#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
     return lines.join("\n");
   }
 
@@ -224,6 +224,7 @@
       $("sharePreview").src = u;
     }
     $("sharePreviewWrap").classList.remove("loading");
+    $("shareSteps").hidden = true;
     $("shareTg").focus({ preventScroll: true });
   }
   function closeShare() {
@@ -276,6 +277,14 @@
      - комп'ютер: соцмережі не дають сайту прикріпити картинку посиланням, тому
        Telegram — картинка копіюється в буфер, відкривається Telegram із текстом, у чаті Ctrl+V;
        Instagram, TikTok, Facebook — картинка завантажується, текст копіюється, відкривається сайт соцмережі. */
+  const PASTE = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘V" : "Ctrl+V";
+  // підказка-кроки в самому вікні (тост зникає надто швидко)
+  function steps(list) {
+    const box = $("shareSteps");
+    box.textContent = "";
+    list.forEach((t) => box.append(el("li", "", t)));
+    box.hidden = false;
+  }
   const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
   function phoneShare() {
     const file = imageFile();
@@ -292,15 +301,16 @@
     if (!copied) saveImage();
     // Telegram ставить параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
     openLink("https://t.me/share/url?url=" + encodeURIComponent(lastText));
-    toast(copied ? "Картинку скопійовано: у Telegram обери чат і натисни Ctrl+V — вона додасться до тексту."
-                 : "Картинку збережено: у Telegram обери чат і прикріпи її до тексту.");
+    steps(copied
+      ? ["Картинку з результатом скопійовано.", "У Telegram обери чат — текст уже буде в полі.", "Натисни " + PASTE + ", щоб додати картинку, і надішли."]
+      : ["Картинку з результатом збережено.", "У Telegram обери чат — текст уже буде в полі.", "Прикріпи збережену картинку (скрепка) і надішли."]);
   }
   function shareToApp(name, webUrl) {
     if (phoneShare()) return;
     writeClipboard(lastText);
     saveImage();
     openLink(webUrl);
-    toast("Картинку збережено, текст скопійовано — створи допис у " + name + ", додай картинку й встав текст.");
+    steps(["Картинку з результатом збережено, текст скопійовано.", "Створи допис у " + name + " і додай збережену картинку.", "Встав текст (" + PASTE + ") і опублікуй."]);
   }
 
   /* ---------- події ---------- */
