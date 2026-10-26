@@ -322,21 +322,23 @@
       ? ["Картинку з результатом скопійовано.", "У Telegram обери чат — текст уже буде в полі.", "Натисни " + PASTE + ", щоб додати картинку, і надішли."]
       : ["Картинку з результатом збережено.", "У Telegram обери чат — текст уже буде в полі.", "Прикріпи збережену картинку (скрепка) і надішли."]);
   }
-  // Instagram і TikTok на комп'ютері не приймають готові дописи від сайтів (лише вручну),
-  // тому нічого не завантажуємо самі — лише копіюємо текст і пояснюємо.
-  function shareToApp(name) {
+  // Instagram і TikTok: на телефоні — меню «Поділитися» з картинкою;
+  // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сторінку створення допису.
+  async function shareToApp(name, url, action) {
     if (phoneShare()) return;
-    writeClipboard(lastText);
-    steps([name + " на комп'ютері не дозволяє сайтам створювати допис — на телефоні ця кнопка відправить картинку одразу.",
-      "Тут: натисни «Завантажити картинку» нижче й додай її в допис " + name + ".",
-      "Текст уже скопійовано — встав його (" + PASTE + ")."]);
+    await writeClipboard(lastText); // до відкриття вкладки, поки сторінка у фокусі
+    saveImage();
+    openLink(url);
+    steps(["Картинку збережено, текст скопійовано.",
+      "У " + name + " натисни «" + action + "» й обери картинку business-lab-result.png.",
+      "Встав текст (" + PASTE + ") і опублікуй."]);
   }
 
   /* ---------- події ---------- */
   $("shareBtn").addEventListener("click", openShare);
   $("shareTg").addEventListener("click", (e) => { e.preventDefault(); shareTelegram(); });
-  $("shareIg").addEventListener("click", () => shareToApp("Instagram"));
-  $("shareTt").addEventListener("click", () => shareToApp("TikTok"));
+  $("shareIg").addEventListener("click", () => shareToApp("Instagram", "https://www.instagram.com/", "Створити"));
+  $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload", "Вибрати відео/фото"));
   $("shareFb").addEventListener("click", (e) => {
     e.preventDefault();
     if (phoneShare()) return;
