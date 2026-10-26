@@ -55,6 +55,8 @@ def parse(qs):
     pp = q.get("p", "").split("-")
     if len(pp) == 2 and all(x.isdigit() for x in pp) and 0 < int(pp[0]) <= int(pp[1]) < 100000:
         place = pp[0] + " із " + pp[1]
+    elif q.get("p") == "out":
+        place = "поза ТОП-100"
     d = "".join(ch for ch in q.get("d", "") if ch.isdigit())[:10]
     depts = []
     for i, dep in enumerate(DEPTS):
@@ -68,7 +70,7 @@ def parse(qs):
 
 def query_of(r):
     q = {"s": r["s"], "t": r["t"]}
-    if r["place"]: q["p"] = r["place"].replace(" із ", "-")
+    if r["place"]: q["p"] = "out" if r["place"].startswith("поза") else r["place"].replace(" із ", "-")
     if r["d"]: q["d"] = r["d"]
     q["u"] = base64.urlsafe_b64encode(r["name"].encode("utf-8")).decode().rstrip("=")
     if r.get("v"): q["v"] = r["v"]

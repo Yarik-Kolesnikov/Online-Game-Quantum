@@ -51,6 +51,7 @@
     const q = ["s=" + r.s, "t=" + Math.round((state.finishedAt - state.startedAt) / 1000)];
     const m = /^(\d+) із (\d+)$/.exec(r.place);
     if (m) q.push("p=" + m[1] + "-" + m[2]);
+    else if (/^поза/.test(r.place)) q.push("p=out"); // не потрапив у ТОП-100
     q.push("d=" + ORDER.map((k) => { const x = r.depts.find((y) => y.k === k); return x ? Math.min(9, x.ok) + "" + Math.min(9, x.n) : "00"; }).join(""));
     q.push("u=" + b64url(r.name));
     q.push("v=3"); // версія прев'ю — нове значення змушує соцмережі взяти свіжу картинку
