@@ -2,8 +2,9 @@
    share.js — «Поділитися результатом»
    Після гри генерує картинку-картку з результатом (1080×1350, підходить для
    Instagram і сторіс) і дає поділитися нею або текстом:
-   - системне меню «Поділитися» на телефоні (Instagram, Telegram, Viber тощо);
-   - посилання на Telegram, Viber, WhatsApp, Facebook;
+   - Telegram і Facebook — через їхні сторінки «поділитися»;
+   - Instagram і TikTok — на телефоні системне меню з картинкою, на ПК картинка
+     завантажується, текст копіюється й відкривається сайт соцмережі;
    - завантажити картинку; скопіювати текст.
    Підключається ПІСЛЯ app.js і бере з нього state, DEPTS, ORDER, QUESTIONS, grade, fmt, toast, $.
    ========================================================================= */
@@ -34,14 +35,38 @@
       const own = state.cards.filter((c) => QUESTIONS[c.qi].dept === k);
       return { k, d: DEPTS[k], ok: own.filter((c) => c.ok).length, n: own.length };
     }).filter((x) => x.n > 0);
-    return { name: state.player, s, title, time: fmt(state.finishedAt - state.startedAt), place: place && place !== "—" ? place : "", depts };
+    const ms = state.finishedAt - state.startedAt;
+    return { name: state.player, s, title, time: fmt(ms), timeWords: timeWords(ms), place: place && place !== "—" ? place : "", depts };
+  }
+  // 1 секунда, 2 секунди, 5 секунд; 1 хвилина, 2 хвилини, 5 хвилин
+  function plural(n, one, few, many) {
+    const a = n % 10, b = n % 100;
+    if (a === 1 && b !== 11) return one;
+    if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few;
+    return many;
+  }
+  function timeWords(ms) {
+    const total = Math.max(1, Math.round(ms / 1000));
+    const m = Math.floor(total / 60), sec = total % 60;
+    const parts = [];
+    if (m) parts.push(m + " " + plural(m, "хвилина", "хвилини", "хвилин"));
+    if (sec || !m) parts.push(sec + " " + plural(sec, "секунда", "секунди", "секунд"));
+    return parts.join(" ");
   }
   function shareText(r, withUrl = true) {
-    let t = "Мій результат у грі BUSINESS LAB: " + r.s + "/10 — «" + r.title + "»!";
-    if (r.place) t += "\nМісце в рейтингу: " + r.place + ". Час: " + r.time + ".";
-    else t += "\nЧас: " + r.time + ".";
-    t += "\nПеревір себе — пройди тест:";
-    return withUrl ? t + " " + siteUrl() : t;
+    const lines = [
+      "Мій результат у BUSINESS LAB — «" + r.title + "»!",
+      "💡 " + r.s + "/10 правильних відповідей"
+    ];
+    if (r.place) lines.push("🏆 Місце в рейтингу: " + r.place);
+    lines.push(
+      "⏱️ Час проходження: " + r.timeWords,
+      "Бізнес — це вміння мислити, аналізувати та приймати рішення! 📊 А кожна спроба — це можливість дізнатися щось нове й покращити свій результат.",
+      "🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"
+    );
+    if (withUrl) lines.push("🔗 " + siteUrl());
+    lines.push("#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай");
+    return lines.join("\n");
   }
 
   /* ---------- малювання картки ---------- */
@@ -209,10 +234,9 @@
     if (!state.finishedAt) { toast("Спочатку завершіть гру."); return; }
     const r = resultData();
     lastText = shareText(r);
-    const url = siteUrl(), textNoUrl = shareText(r, false);
-    $("shareTg").href = "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(textNoUrl);
-    $("shareWa").href = "https://wa.me/?text=" + encodeURIComponent(lastText);
-    $("shareVb").href = "viber://forward?text=" + encodeURIComponent(lastText);
+    const url = siteUrl();
+    // Telegram вставляє параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
+    $("shareTg").href = "https://t.me/share/url?url=" + encodeURIComponent(lastText);
     $("shareFb").href = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
     $("shareTextPreview").textContent = lastText;
 
@@ -229,9 +253,7 @@
       $("sharePreview").src = u;
     }
     $("sharePreviewWrap").classList.remove("loading");
-    // кнопка системного меню — лише там, де браузер це вміє (телефони, частина ПК)
-    $("shareNative").hidden = !navigator.share;
-    $("shareNative").focus({ preventScroll: true });
+    $("shareTg").focus({ preventScroll: true });
   }
   function closeShare() {
     if (!modal() || modal().hidden) return;
@@ -240,47 +262,67 @@
     $("shareBtn").focus({ preventScroll: true });
   }
 
-  async function nativeShare() {
-    const file = lastBlob ? new File([lastBlob], "business-lab-result.png", { type: "image/png" }) : null;
-    try {
-      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "BUSINESS LAB", text: lastText });
-      } else {
-        await navigator.share({ title: "BUSINESS LAB", text: shareText(resultData(), false), url: siteUrl() });
-      }
-    } catch (e) {
-      if (e && e.name !== "AbortError") toast("Не вдалося відкрити меню «Поділитися». Завантаж картинку або скопіюй текст.");
-    }
+  function imageFile() {
+    return lastBlob ? new File([lastBlob], "business-lab-result.png", { type: "image/png" }) : null;
   }
-  function download() {
-    if (!lastBlob) return;
+  function saveImage() {
+    if (!lastBlob) return false;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(lastBlob);
     a.download = "business-lab-result.png";
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    toast("Картинку збережено. Додай її в Instagram (допис або сторіс).");
+    return true;
+  }
+  function download() {
+    if (saveImage()) toast("Картинку збережено.");
+  }
+  async function writeClipboard(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.append(ta); ta.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (e2) { ok = false; }
+      ta.remove();
+      return ok;
+    }
   }
   async function copyText() {
-    try {
-      await navigator.clipboard.writeText(lastText);
-      toast("Текст скопійовано — встав його в повідомлення.");
-    } catch (e) {
-      const ta = document.createElement("textarea");
-      ta.value = lastText; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.append(ta); ta.select();
-      try { document.execCommand("copy"); toast("Текст скопійовано — встав його в повідомлення."); }
-      catch (e2) { toast("Не вдалося скопіювати текст."); }
-      ta.remove();
+    toast(await writeClipboard(lastText) ? "Текст скопійовано — встав його в повідомлення чи допис." : "Не вдалося скопіювати текст.");
+  }
+  // Instagram і TikTok не мають посилання «поділитися», тому:
+  // на телефоні — системне меню з картинкою (там є Instagram/TikTok, сторіс, допис);
+  // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сайт соцмережі.
+  function shareToApp(name, webUrl) {
+    const file = imageFile();
+    const canFiles = file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] });
+    writeClipboard(lastText); // текст під рукою, щоб вставити в підпис
+    if (canFiles) {
+      navigator.share({ files: [file], text: lastText }).catch((e) => {
+        if (e && e.name !== "AbortError") { saveImage(); toast("Картинку збережено, текст скопійовано — додай їх у " + name + "."); }
+      });
+      return;
     }
+    saveImage();
+    toast("Картинку збережено, текст скопійовано — додай їх у " + name + ".");
+    window.open(webUrl, "_blank", "noopener");
   }
 
   /* ---------- події ---------- */
   $("shareBtn").addEventListener("click", openShare);
-  $("shareNative").addEventListener("click", nativeShare);
+  $("shareIg").addEventListener("click", () => shareToApp("Instagram", "https://www.instagram.com/"));
+  $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload"));
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
-  ["shareTg", "shareWa", "shareFb"].forEach((id) => $(id).addEventListener("click", (e) => { e.preventDefault(); openLink($(id).href); }));
+  $("shareTg").addEventListener("click", (e) => { e.preventDefault(); openLink($("shareTg").href); });
+  // Facebook бере з посилання лише адресу сайту, тож текст копіюємо — його можна вставити в допис
+  $("shareFb").addEventListener("click", (e) => {
+    e.preventDefault();
+    writeClipboard(lastText).then((ok) => { if (ok) toast("Текст скопійовано — встав його в допис."); });
+    openLink($("shareFb").href);
+  });
   document.querySelectorAll("[data-share-close]").forEach((n) => n.addEventListener("click", closeShare));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeShare(); });
 
