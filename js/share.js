@@ -349,12 +349,11 @@
     e.preventDefault();
     if (phoneShare()) return;
     // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
-    // Текст допису Facebook приймає через параметр hashtag (без емодзі — він їх псує).
-    // Посилання окремо не пишемо: його показує прев'ю з картинкою результату.
-    const fbText = "А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!\n" + HASHTAGS;
+    // У допис Facebook сайт може передати лише хештеги (параметр hashtag, довгий текст Facebook відкидає з помилкою).
+    // «А який результат буде у тебе?» — на картинці, ім'я, бал і час — у заголовку прев'ю.
     openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())) +
-      "&hashtag=" + encodeURIComponent(fbText));
-    steps(["Текст, хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
+      "&hashtag=" + encodeURIComponent(HASHTAGS));
+    steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
   });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
