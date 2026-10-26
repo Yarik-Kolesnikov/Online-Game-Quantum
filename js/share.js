@@ -328,29 +328,29 @@
       ? ["Картинку з результатом скопійовано.", "У Telegram обери чат — текст уже буде в полі.", "Натисни " + PASTE + ", щоб додати картинку, і надішли."]
       : ["Картинку з результатом збережено.", "У Telegram обери чат — текст уже буде в полі.", "Прикріпи збережену картинку (скрепка) і надішли."]);
   }
-  function shareToApp(name, webUrl) {
+  // Instagram і TikTok на комп'ютері не приймають готові дописи від сайтів (лише вручну),
+  // тому нічого не завантажуємо самі — лише копіюємо текст і пояснюємо.
+  function shareToApp(name) {
     if (phoneShare()) return;
     writeClipboard(lastText);
-    saveImage();
-    openLink(webUrl);
-    steps(["Картинку з результатом збережено, текст скопійовано.", "Створи допис у " + name + " і додай збережену картинку.", "Встав текст (" + PASTE + ") і опублікуй."]);
+    steps([name + " на комп'ютері не дозволяє сайтам створювати допис — на телефоні ця кнопка відправить картинку одразу.",
+      "Тут: натисни «Завантажити картинку» нижче й додай її в допис " + name + ".",
+      "Текст уже скопійовано — встав його (" + PASTE + ")."]);
   }
 
   /* ---------- події ---------- */
   $("shareBtn").addEventListener("click", openShare);
   $("shareTg").addEventListener("click", (e) => { e.preventDefault(); shareTelegram(); });
-  $("shareIg").addEventListener("click", () => shareToApp("Instagram", "https://www.instagram.com/"));
-  $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload"));
+  $("shareIg").addEventListener("click", () => shareToApp("Instagram"));
+  $("shareTt").addEventListener("click", () => shareToApp("TikTok"));
   $("shareFb").addEventListener("click", (e) => {
     e.preventDefault();
     if (phoneShare()) return;
-    if (SHARE_SERVER) { // Facebook сам підтягне картинку результату з посилання
-      writeClipboard(lastText);
-      openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())));
-      steps(["Картинка з результатом підтягнеться сама.", "Текст скопійовано — встав його в допис (" + PASTE + ") і опублікуй."]);
-      return;
-    }
-    shareToApp("Facebook", "https://www.facebook.com/");
+    // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
+    writeClipboard(lastText);
+    openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())));
+    steps([SHARE_SERVER ? "Картинка з результатом підтягнеться сама." : "Посилання на гру вже в дописі.",
+      "Facebook не дозволяє сайтам вставляти текст — він скопійований, встав його (" + PASTE + ") і опублікуй."]);
   });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
