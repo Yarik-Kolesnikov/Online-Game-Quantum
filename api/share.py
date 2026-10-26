@@ -62,7 +62,8 @@ def parse(qs):
             ok, n = int(d[i * 2]), int(d[i * 2 + 1])
             if n > 0: depts.append((dep, min(ok, n), n))
     return {"name": name, "s": s, "t": t, "time": "%02d:%02d" % (t // 60, t % 60), "place": place,
-            "title": grade(s), "depts": depts, "d": d}
+            "title": grade(s), "depts": depts, "d": d,
+            "v": "".join(ch for ch in q.get("v", "") if ch.isalnum())[:8]}
 
 
 def query_of(r):
@@ -70,6 +71,7 @@ def query_of(r):
     if r["place"]: q["p"] = r["place"].replace(" із ", "-")
     if r["d"]: q["d"] = r["d"]
     q["u"] = base64.urlsafe_b64encode(r["name"].encode("utf-8")).decode().rstrip("=")
+    if r.get("v"): q["v"] = r["v"]
     return urlencode(q, quote_via=quote)
 
 
@@ -191,9 +193,9 @@ def render(r):
 def page(r, base):
     q = query_of(r)
     img = base + "/card?" + q
-    title = "%s — %d/10, «%s» | BUSINESS LAB" % (r["name"], r["s"], r["title"])
-    desc = "Час: %s%s. А який результат буде у тебе? Перевір свої знання в BUSINESS LAB!" % (
-        r["time"], (", місце в рейтингу: " + r["place"]) if r["place"] else "")
+    title = "%s — %d/10 за %s · «%s»" % (r["name"], r["s"], r["time"], r["title"])
+    desc = ("Місце в рейтингу: %s. " % r["place"] if r["place"] else "") + \
+        "🔥 А який результат буде у тебе? Перевір свої знання та випробуй себе в BUSINESS LAB!"
     e = lambda s: escape(s, quote=True)
     return """<!doctype html><html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -210,13 +212,23 @@ def page(r, base):
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{i}">
-<meta http-equiv="refresh" content="0; url={g}">
-<link rel="canonical" href="{g}">
 </head><body style="font-family:sans-serif;text-align:center;padding:40px">
 <p><img src="{i}" alt="" style="max-width:100%;border-radius:12px"></p>
 <p><a href="{g}">Перейти до гри BUSINESS LAB →</a></p>
 <script>location.replace({gj});</script>
 </body></html>""".format(t=e(title), d=e(desc), u=e(base + "/r?" + q), i=e(img), g=e(GAME_URL), gj='"' + GAME_URL + '"')
+
+
+# Хто читає прев'ю (Facebook, Telegram тощо) — отримує сторінку з og:image.
+# Людина, що натиснула посилання, одразу йде на гру (302).
+# Мета-refresh не використовуємо: Facebook іде за ним і бере прев'ю вже з сайту гри.
+BOTS = ("facebookexternalhit", "facebot", "meta-externalagent", "telegrambot", "twitterbot", "whatsapp", "slackbot",
+        "discordbot", "linkedinbot", "viber", "vkshare", "pinterest", "skypeuripreview", "redditbot", "applebot",
+        "googlebot", "bingbot", "embedly", "iframely", "bot", "crawler", "spider", "preview")
+
+def is_bot(ua):
+    ua = (ua or "").lower()
+    return not ua or any(b in ua for b in BOTS)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -229,6 +241,13 @@ class handler(BaseHTTPRequestHandler):
         try:
             if q.get("img", [""])[0] == "1" or u.path.rstrip("/").endswith("/card"):
                 body, ctype = render(r), "image/png"
+            elif not is_bot(self.headers.get("user-agent")):
+                self.send_response(302)
+                self.send_header("Location", GAME_URL)
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Vary", "User-Agent")
+                self.end_headers()
+                return
             else:
                 body, ctype = page(r, base).encode("utf-8"), "text/html; charset=utf-8"
         except Exception as ex:  # щоб прев'ю не ламалося — віддаємо загальну картинку гри
@@ -238,7 +257,8 @@ class handler(BaseHTTPRequestHandler):
             return
         self.send_response(200)
         self.send_header("Content-Type", ctype)
-        self.send_header("Cache-Control", "public, max-age=86400, s-maxage=31536000, immutable")
+        self.send_header("Cache-Control", "public, max-age=86400, s-maxage=31536000, immutable" if ctype == "image/png" else "no-store")
+        self.send_header("Vary", "User-Agent")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

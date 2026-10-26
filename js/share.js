@@ -52,6 +52,7 @@
     if (m) q.push("p=" + m[1] + "-" + m[2]);
     q.push("d=" + ORDER.map((k) => { const x = r.depts.find((y) => y.k === k); return x ? Math.min(9, x.ok) + "" + Math.min(9, x.n) : "00"; }).join(""));
     q.push("u=" + b64url(r.name));
+    q.push("v=2"); // версія прев'ю — нове значення змушує соцмережі взяти свіжу картинку
     return SHARE_SERVER.replace(/\/$/, "") + "/r?" + q.join("&");
   }
   // Текст під картинкою. Сам результат (бали, місце, час) уже є на картинці.
@@ -348,7 +349,8 @@
     if (phoneShare()) return;
     // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
     writeClipboard(lastText);
-    openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())));
+    openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())) +
+      "&hashtag=" + encodeURIComponent("#BusinessLab") + "&quote=" + encodeURIComponent(lastText));
     steps([SHARE_SERVER ? "Картинка з результатом підтягнеться сама." : "Посилання на гру вже в дописі.",
       "Facebook не дозволяє сайтам вставляти текст — він скопійований, встав його (" + PASTE + ") і опублікуй."]);
   });
