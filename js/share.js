@@ -13,7 +13,7 @@
   const SITE_URL = "https://yarik-kolesnikov.github.io/Online-Game-Quantum/";
   // Сервер картинок результату (папка api/, хостинг Vercel). Посилання <SHARE_SERVER>/r?… у Telegram
   // та Facebook показує прев'ю з картинкою результату й веде на гру. Порожньо — ділимося адресою гри.
-  const SHARE_SERVER = "";
+  const SHARE_SERVER = "https://business-lab-rho.vercel.app";
   const W = 1080, H = 1350;
   const C = {
     bg: "#ffffff", text: "#12151b", muted: "#6b7280", line: "rgba(17, 22, 32, 0.12)",
