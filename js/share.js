@@ -276,13 +276,6 @@
   async function copyText() {
     toast(await writeClipboard(lastText) ? "Текст скопійовано — встав його в повідомлення чи допис." : "Не вдалося скопіювати текст.");
   }
-  async function copyImage() {
-    try {
-      if (!lastBlob || !window.ClipboardItem || !navigator.clipboard?.write) return false;
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": lastBlob })]);
-      return true;
-    } catch (e) { return false; }
-  }
 
   /* Як потрапляє картинка в соцмережу:
      - телефон: системне меню «Поділитися» з картинкою й текстом, обираєш Telegram / Instagram / TikTok / Facebook;
@@ -298,34 +291,36 @@
     box.hidden = false;
   }
   const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
-  function phoneShare() {
+  // Системне меню «Поділитися» з картинкою (телефон). Викликаємо ОДРАЗУ після натискання:
+  // будь-яка інша дія перед ним (напр., копіювання в буфер) на iPhone «з'їдає» дозвіл, і меню не відкривається.
+  function phoneShare(name) {
     const file = imageFile();
     if (!isPhone || !file || !navigator.share || !navigator.canShare || !navigator.canShare({ files: [file] })) return false;
-    writeClipboard(lastText); // якщо застосунок не підхопить текст — його можна вставити
-    navigator.share({ files: [file], text: lastText }).catch((e) => {
-      if (e && e.name !== "AbortError") { saveImage(); toast("Картинку збережено, текст скопійовано — додай їх у допис."); }
+    navigator.share({ files: [file] }).then(() => {
+      steps(["Готово!", "Для підпису натисни «Копіювати текст» і встав його в допис " + name + "."]);
+    }).catch((e) => {
+      if (e && e.name === "AbortError") return;
+      steps(["Не вдалося відкрити меню «Поділитися».", "Натисни «Завантажити картинку» й додай її в " + name + " вручну."]);
     });
+    steps(["У меню обери " + name + " — картинка з результатом уже там.", "Текст для підпису: «Копіювати текст» нижче."]);
     return true;
   }
-  async function shareTelegram() {
-    if (phoneShare()) return;
-    if (SHARE_SERVER) { // прев'ю посилання саме покаже картинку результату
-      openLink("https://t.me/share/url?url=" + encodeURIComponent(lastText));
-      steps(["Обери чат у Telegram і надішли.", "Картинка з результатом з'явиться сама — у прев'ю посилання."]);
-      return;
+  // Telegram: посилання з текстом і хештегами, прев'ю посилання показує картинку результату.
+  function shareTelegram() {
+    const text = encodeURIComponent(lastText);
+    if (isPhone) {
+      // одразу в застосунок Telegram; якщо його немає — сторінка t.me
+      location.href = "tg://msg_url?url=" + text;
+      setTimeout(() => { if (!document.hidden) location.href = "https://t.me/share/url?url=" + text; }, 1500);
+    } else {
+      openLink("https://t.me/share/url?url=" + text);
     }
-    const copied = await copyImage();
-    if (!copied) saveImage();
-    // Telegram ставить параметр url першим рядком, тому весь текст (із посиланням) передаємо в ньому
-    openLink("https://t.me/share/url?url=" + encodeURIComponent(lastText));
-    steps(copied
-      ? ["Картинку з результатом скопійовано.", "У Telegram обери чат — текст уже буде в полі.", "Натисни " + PASTE + ", щоб додати картинку, і надішли."]
-      : ["Картинку з результатом збережено.", "У Telegram обери чат — текст уже буде в полі.", "Прикріпи збережену картинку (скрепка) і надішли."]);
+    steps(["Обери чат у Telegram і надішли.", "Картинка з результатом з'явиться сама — у прев'ю посилання."]);
   }
   // Instagram і TikTok: на телефоні — меню «Поділитися» з картинкою;
   // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сторінку створення допису.
   async function shareToApp(name, url, action) {
-    if (phoneShare()) return;
+    if (phoneShare(name)) return;
     await writeClipboard(lastText); // до відкриття вкладки, поки сторінка у фокусі
     saveImage();
     openLink(url);
@@ -341,7 +336,6 @@
   $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload", "Вибрати відео/фото"));
   $("shareFb").addEventListener("click", (e) => {
     e.preventDefault();
-    if (phoneShare()) return;
     // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
     // У допис Facebook сайт може передати лише хештеги (параметр hashtag, довгий текст Facebook відкидає з помилкою).
     // «А який результат буде у тебе?» — на картинці, ім'я, бал і час — у заголовку прев'ю.
