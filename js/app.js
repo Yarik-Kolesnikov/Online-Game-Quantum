@@ -262,7 +262,23 @@ function closeModal() {
 let db = null, results = [], localMode = true;
 function readLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
 function writeLocal(list) { try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch (e) {} }
-const sorted = () => results.slice().sort((a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt);
+/* Одна людина = один рядок у рейтингу. Однаковим вважаємо ПІБ без різниці у великих/малих літерах,
+   порядку слів, зайвих пробілах, крапках і виді апострофа: «Ярослав Колесников» = «колесников ЯРОСЛАВ».
+   Якщо людина пройшла гру ще раз, у рейтингу лишається тільки її НОВІШИЙ результат. */
+function personKey(name) {
+  return String(name || "").toLocaleLowerCase("uk")
+    .replace(/[’ʼ‘`´]/g, "'")
+    .split(/[\s.,;]+/).filter(Boolean).sort().join(" ");
+}
+function latestPerPerson(list) {
+  const byPerson = new Map();
+  list.forEach((r) => {
+    const k = personKey(r.name), prev = byPerson.get(k);
+    if (!prev || (r.finishedAt || 0) >= (prev.finishedAt || 0)) byPerson.set(k, r);
+  });
+  return [...byPerson.values()];
+}
+const sorted = () => latestPerPerson(results).sort((a, b) => b.score - a.score || a.timeMs - b.timeMs || a.finishedAt - b.finishedAt);
 
 async function saveResult() {
   const rec = { name: state.player, score: score(), total: CARDS, timeMs: state.finishedAt - state.startedAt, finishedAt: state.finishedAt };
@@ -278,7 +294,9 @@ async function saveResult() {
       toast(e && e.code === "quota_exceeded" ? "Рейтинг переповнений, результат збережено лише на цьому пристрої." : "Немає права запису в загальний рейтинг, результат збережено на цьому пристрої.");
     }
   }
-  const list = readLocal(); list.push({ id, ...rec }); writeLocal(list);
+  // у сховищі цього браузера старий результат тієї ж людини видаляємо зовсім
+  const key = personKey(rec.name);
+  const list = readLocal().filter((r) => personKey(r.name) !== key); list.push({ id, ...rec }); writeLocal(list);
   if (localMode) results = list; else results.push({ id, ...rec, localOnly: true });
   renderRating();
 }
