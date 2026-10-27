@@ -322,6 +322,34 @@
     }
     steps(["Обери чат у Telegram і надішли.", "Картинка з результатом з'явиться автоматично під посиланням."]);
   }
+  // Facebook: вікно допису з картинкою результату (прев'ю посилання) і хештегами.
+  // У допис сайт може передати лише хештеги (параметр hashtag; довгий текст Facebook відкидає з помилкою).
+  function shareFacebook() {
+    const web = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())) +
+      "&hashtag=" + encodeURIComponent(HASHTAGS);
+    if (!isPhone) {
+      openLink(web);
+      steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
+      return;
+    }
+    // Телефон: звичайне посилання facebook.com відкриває застосунок Facebook на стрічці, без вікна допису.
+    // Тому відкриваємо сторінку допису саме всередині застосунку (fb://facewebmodal), а якщо застосунку немає — сайт.
+    const inApp = "fb://facewebmodal/f?href=" + encodeURIComponent(web);
+    if (/Android/i.test(navigator.userAgent)) {
+      location.href = "intent://facewebmodal/f?href=" + encodeURIComponent(web) +
+        "#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=" + encodeURIComponent(web) + ";end";
+    } else {
+      let left = false;
+      const gone = () => { left = true; };
+      window.addEventListener("pagehide", gone, { once: true });
+      document.addEventListener("visibilitychange", () => { if (document.hidden) gone(); }, { once: true });
+      location.href = inApp;
+      // застосунку немає (або він не відкрився) — переходимо на сайт Facebook
+      setTimeout(() => { if (!left && !document.hidden) location.href = web; }, 2500);
+    }
+    steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися».",
+      "Якщо Facebook не відкрився — натисни кнопку Facebook ще раз."]);
+  }
   // Instagram і TikTok: на телефоні — меню «Поділитися» з картинкою;
   // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сторінку створення допису.
   async function shareToApp(name, url, action) {
@@ -341,15 +369,7 @@
   $("shareTt").addEventListener("click", () => shareToApp("TikTok", "https://www.tiktok.com/upload", "Вибрати відео/фото"));
   $("shareFb").addEventListener("click", (e) => {
     e.preventDefault();
-    // На телефоні посилання facebook.com відкриває застосунок Facebook без вікна допису,
-    // тому там — меню «Поділитися» з картинкою (обираєш Facebook, текст вставляєш із буфера).
-    if (phoneShare("Facebook")) return;
-    // Facebook сам підтягує прев'ю посилання (з сервером — картинку результату), а текст вставляти не дозволяє
-    // У допис Facebook сайт може передати лише хештеги (параметр hashtag, довгий текст Facebook відкидає з помилкою).
-    // «А який результат буде у тебе?» — на картинці, ім'я, бал і час — у заголовку прев'ю.
-    openLink("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(resultLink(resultData())) +
-      "&hashtag=" + encodeURIComponent(HASHTAGS));
-    steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
+    shareFacebook();
   });
   $("shareDownload").addEventListener("click", download);
   $("shareCopy").addEventListener("click", copyText);
