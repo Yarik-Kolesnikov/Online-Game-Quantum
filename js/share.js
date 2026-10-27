@@ -332,10 +332,17 @@
       steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
       return;
     }
-    // Телефон: пряме посилання facebook.com iPhone віддає застосунку Facebook, а той показує стрічку без допису.
-    // Тому йдемо через наш сервер (/fb), який переадресовує на сторінку допису — вона відкривається на сайті Facebook.
-    if (SHARE_SERVER) openLink(resultLink(resultData()).replace("/r?", "/fb?"));
-    else openLink(web);
+    // Телефон: посилання facebook.com телефон зазвичай віддає застосунку Facebook, а той показує стрічку без допису.
+    // Мітка #no_universal_links — офіційний виняток Facebook (файл apple-app-site-association):
+    // з нею сторінка допису відкривається в браузері, як на комп'ютері, з картинкою й хештегами.
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua) && /Chrome\//.test(ua) && !/SamsungBrowser|EdgA|OPR|YaBrowser|Firefox/i.test(ua)) {
+      // Android (Chrome): відкриваємо сторінку допису саме в Chrome, а не в застосунку Facebook
+      location.href = "intent://" + web.replace(/^https:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" +
+        encodeURIComponent(web) + ";end";
+    } else {
+      openLink(web + "#no_universal_links");
+    }
     steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися».",
       "Якщо Facebook попросить увійти — увійди, і допис відкриється."]);
   }
