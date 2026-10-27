@@ -4,6 +4,7 @@
   },
   "rewrites": [
     { "source": "/r", "destination": "/api/share" },
-    { "source": "/card", "destination": "/api/share?img=1" }
+    { "source": "/card", "destination": "/api/share?img=1" },
+    { "source": "/fb", "destination": "/api/share?fb=1" }
   ]
 }

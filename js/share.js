@@ -332,23 +332,12 @@
       steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися»."]);
       return;
     }
-    // Телефон: звичайне посилання facebook.com відкриває застосунок Facebook на стрічці, без вікна допису.
-    // Тому відкриваємо сторінку допису саме всередині застосунку (fb://facewebmodal), а якщо застосунку немає — сайт.
-    const inApp = "fb://facewebmodal/f?href=" + encodeURIComponent(web);
-    if (/Android/i.test(navigator.userAgent)) {
-      location.href = "intent://facewebmodal/f?href=" + encodeURIComponent(web) +
-        "#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=" + encodeURIComponent(web) + ";end";
-    } else {
-      let left = false;
-      const gone = () => { left = true; };
-      window.addEventListener("pagehide", gone, { once: true });
-      document.addEventListener("visibilitychange", () => { if (document.hidden) gone(); }, { once: true });
-      location.href = inApp;
-      // застосунку немає (або він не відкрився) — переходимо на сайт Facebook
-      setTimeout(() => { if (!left && !document.hidden) location.href = web; }, 2500);
-    }
+    // Телефон: пряме посилання facebook.com iPhone віддає застосунку Facebook, а той показує стрічку без допису.
+    // Тому йдемо через наш сервер (/fb), який переадресовує на сторінку допису — вона відкривається на сайті Facebook.
+    if (SHARE_SERVER) openLink(resultLink(resultData()).replace("/r?", "/fb?"));
+    else openLink(web);
     steps(["Хештеги й картинка з результатом уже в дописі — натисни «Поділитися».",
-      "Якщо Facebook не відкрився — натисни кнопку Facebook ще раз."]);
+      "Якщо Facebook попросить увійти — увійди, і допис відкриється."]);
   }
   // Instagram і TikTok: на телефоні — меню «Поділитися» з картинкою;
   // на комп'ютері — зберігаємо картинку, копіюємо текст і відкриваємо сторінку створення допису.

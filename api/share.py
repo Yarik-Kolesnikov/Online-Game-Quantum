@@ -27,6 +27,7 @@ DEPTS = [  # код, назва, колір, колір тексту на пла
     ("БУ", "Бізнес та управління", "#fd7614", "#ffffff"),
     ("ЕМС", "Економіка та митна справа", "#fccb15", "#1a1203"),
 ]
+FB_HASHTAGS = "#BusinessLab #Квантум #ЗапорізькаПолітехніка #ОсвітняГра #МислиАналізуйПеремагай"
 BLUE, YELLOW, GOLD, TEXT, MUTED = "#0253ce", "#f5b83d", "#b27806", "#12151b", "#6b7280"
 
 
@@ -240,6 +241,16 @@ class handler(BaseHTTPRequestHandler):
         host = self.headers.get("x-forwarded-host") or self.headers.get("host") or "localhost"
         base = "https://" + host
         try:
+            if q.get("fb", [""])[0] == "1" or u.path.rstrip("/").endswith("/fb"):
+                # Facebook з телефона: перехід через переадресацію з нашого домену відкриває
+                # вікно допису на сайті Facebook (пряме посилання iPhone віддає застосунку, і той показує стрічку).
+                link = base + "/r?" + query_of(r)
+                self.send_response(302)
+                self.send_header("Location", "https://www.facebook.com/sharer/sharer.php?" + urlencode(
+                    {"u": link, "hashtag": FB_HASHTAGS}, quote_via=quote))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
             if q.get("img", [""])[0] == "1" or u.path.rstrip("/").endswith("/card"):
                 body, ctype = render(r), "image/png"
             elif not is_bot(self.headers.get("user-agent")):
