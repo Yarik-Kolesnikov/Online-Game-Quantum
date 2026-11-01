@@ -15,7 +15,7 @@ from urllib.request import urlopen
 from html import escape
 import io, os, base64
 
-GAME_URL = "https://yarik-kolesnikov.github.io/Online-Game-Quantum/"
+GAME_URL = "https://business-lab-zp.vercel.app/"
 FONT_URL = GAME_URL + "fonts/"
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT_DIRS = [os.path.join(HERE, "..", "fonts"), os.path.join(os.getcwd(), "fonts"), "/tmp/bl-fonts"]
