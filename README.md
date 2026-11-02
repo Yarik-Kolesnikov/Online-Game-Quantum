@@ -102,12 +102,12 @@ js/app.js             логіка гри: картки, таймер, підр�
 Код відформатовано автоматично, тож він однаковий у всіх файлах:
 
 - **HTML, CSS, JavaScript** — [Prettier](https://prettier.io) (налаштування в `.prettierrc.json`: ширина рядка 100, відступ 2 пробіли);
-- **Python** (`api/share.py`) — [Black](https://black.readthedocs.io) (налаштування в `pyproject.toml`), перевірка — [Ruff](https://docs.astral.sh/ruff/);
+- **Python** (`api/share.py`) — [Black](https://black.readthedocs.io) з шириною рядка 100, перевірка — [Ruff](https://docs.astral.sh/ruff/). Файл `pyproject.toml` у корені не створюємо: Vercel тоді бере залежності з нього замість `requirements.txt`, і сервер картинок лишається без Pillow;
 - спільні правила для редакторів (кодування, відступи, кінці рядків) — у `.editorconfig`.
 
 Щоб відформатувати після змін:
 
 ```bash
 npx prettier --write index.html css js
-black api
+black -l 100 api
 ```
