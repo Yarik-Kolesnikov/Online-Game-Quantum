@@ -96,3 +96,18 @@ js/app.js             логіка гри: картки, таймер, підр�
 - `fonts/` — шрифти для картинки (Unbounded, Manrope, JetBrains Mono, ліцензія OFL).
 - `vercel.json`, `requirements.txt` — налаштування Vercel. Проєкт `business-lab` у Vercel оновлюється сам після кожного push у `main`.
 - Адреса сервера задається в `js/share.js` (`SHARE_SERVER`); якщо залишити порожньою, ділимося просто адресою гри.
+
+## Оформлення коду
+
+Код відформатовано автоматично, тож він однаковий у всіх файлах:
+
+- **HTML, CSS, JavaScript** — [Prettier](https://prettier.io) (налаштування в `.prettierrc.json`: ширина рядка 100, відступ 2 пробіли);
+- **Python** (`api/share.py`) — [Black](https://black.readthedocs.io) (налаштування в `pyproject.toml`), перевірка — [Ruff](https://docs.astral.sh/ruff/);
+- спільні правила для редакторів (кодування, відступи, кінці рядків) — у `.editorconfig`.
+
+Щоб відформатувати після змін:
+
+```bash
+npx prettier --write index.html css js
+black api
+```

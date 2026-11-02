@@ -9,5 +9,5 @@ BL.firebaseConfig = {
   projectId: "business-lab-c15c7",
   storageBucket: "business-lab-c15c7.firebasestorage.app",
   messagingSenderId: "864744994356",
-  appId: "1:864744994356:web:9ea7cead9f56f9c006bc61"
+  appId: "1:864744994356:web:9ea7cead9f56f9c006bc61",
 };
