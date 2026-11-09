@@ -243,6 +243,11 @@
     if (name.length < 3) return { ok: false, reason: "Введіть ім'я (щонайменше 3 літери)." };
     if (name.length > 48) return { ok: false, reason: "Ім'я задовге — до 48 символів." };
     const words = name.toLowerCase().split(" ");
+    if (words.length < 2)
+      return {
+        ok: false,
+        reason: "Введіть ім'я та прізвище через пробіл, наприклад: Іван Петренко.",
+      };
     if (words.length > 4)
       return { ok: false, reason: "Забагато слів — достатньо імені та прізвища." };
     if (!words.every((w) => WORD.test(w)))

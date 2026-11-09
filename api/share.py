@@ -220,7 +220,7 @@ def name_ok(raw):
     if not 3 <= len(name) <= 48:
         return False
     words = name.lower().split(" ")
-    if len(words) > 4 or not all(_WORD.match(w) for w in words):
+    if not 2 <= len(words) <= 4 or not all(_WORD.match(w) for w in words):
         return False
     if any(r.search(_for_bad(w)) for w in words for r in _BAD_WORD):
         return False

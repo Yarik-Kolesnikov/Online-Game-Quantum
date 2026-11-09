@@ -16,8 +16,8 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 48
-        // лише літери (укр./рос./лат.), дефіс, апостроф; 1–4 слова через один пробіл
-        && request.resource.data.name.matches("^[A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*( [A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*){0,3}$")
+        // лише літери (укр./рос./лат.), дефіс, апостроф; 2–4 слова (ім'я та прізвище) через один пробіл
+        && request.resource.data.name.matches("^[A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*( [A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*){1,3}$")
         // основний мат (повна перевірка — js/namecheck.js; тут — щоб не обійти сайт прямим запитом)
         && !request.resource.data.name.lower().matches(".*(ху[йяию]|п[иі]зд|бля[дт]|залуп|г[ао]нд[оа]н|п[иі]д[оа]р|fuck|shit|bitch|pizd|blyad).*")
         && request.resource.data.score is int
