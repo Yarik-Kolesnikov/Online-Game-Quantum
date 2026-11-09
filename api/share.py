@@ -134,10 +134,72 @@ def _for_bad(w):
     return re.sub(r"(.)\1+", r"\1", w)
 
 
+def _load_sets():
+    """Словники пар літер беремо з js/namecheck.js — одне джерело для сайту й сервера."""
+    for path in (
+        os.path.join(HERE, "..", "js", "namecheck.js"),
+        os.path.join(os.getcwd(), "js", "namecheck.js"),
+    ):
+        try:
+            src = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        out = {}
+        for key in ("PAIRS", "START_CC", "END_CC", "CCC"):
+            m = re.search(rf"const {key} = new Set\((.*?)\);", src, re.S)
+            out[key] = set(" ".join(re.findall(r'"([^"]*)"', m.group(1))).split()) if m else set()
+        return out
+    return {}
+
+
+_SETS = _load_sets()
+_CYR_V = "аеєиіїоуюяыэё"
+_CYR_RE = re.compile("[а-яґєіїё]")
+
+
+def _data_bad(p):
+    """Перевірки за словником пар літер (ті самі, що rarePairsBad/badEdges/badCluster у JS)."""
+    if not _SETS:
+        return False
+    pairs, cyr = _SETS["PAIRS"], bool(_CYR_RE.search(p))
+    rare = [p[i : i + 2] for i in range(len(p) - 1) if p[i : i + 2] not in pairs]
+    hard = [x for x in rare if (x[0] in _V) == (x[1] in _V)]
+    if len(rare) >= 2 or (cyr and hard):
+        return True
+    if not cyr:
+        return False
+    cons = re.compile(f"[{_C_CYR}йь]{{2}}")
+    if len(p) >= 3:
+        if cons.fullmatch(p[:2]) and p[:2] not in _SETS["START_CC"]:
+            return True
+        if cons.fullmatch(p[-2:]) and p[-2:] not in _SETS["END_CC"]:
+            return True
+    cons3 = re.compile(f"[{_C_CYR}йь]{{3}}")
+    return any(
+        cons3.fullmatch(p[i : i + 3]) and p[i : i + 3] not in _SETS["CCC"]
+        for i in range(len(p) - 2)
+    )
+
+
+def _repeated_trigram(p):
+    if len(p) < 8:
+        return False
+    tris = [p[i : i + 3] for i in range(len(p) - 2)]
+    return len(set(tris)) < len(tris)
+
+
 def _gibberish(p):
     if not any(c in _V for c in p):
         return True
-    if re.search(r"(.)\1\1", p) or re.search(r"(.{2})\1\1", p) or re.fullmatch(r"(.{3,})\1+", p):
+    if re.search(r"(.)\1\1", p) or re.search(r"(.{2,4})\1\1", p) or re.fullmatch(r"(.{2,})\1+", p):
+        return True
+    if _CYR_RE.search(p) and re.search(f"[{_CYR_V}]{{3}}", p):
+        return True
+    if len(p) > 20 or _repeated_trigram(p):
+        return True
+    if re.match(r"(.)\1", p) and not p.startswith("ll"):
+        return True
+    if _data_bad(p):
         return True
     if re.search(f"[{_V}]{{4,}}", p) or re.search(f"[{_C_CYR}bcdfghjklmnpqrstvwxz]{{6,}}", p):
         return True
