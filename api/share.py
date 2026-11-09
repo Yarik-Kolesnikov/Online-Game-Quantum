@@ -17,6 +17,8 @@ BUSINESS LAB — сторінка й картинка результату дл�
 import base64
 import io
 import os
+import re
+import unicodedata
 from html import escape
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, quote, urlencode, urlparse
@@ -56,6 +58,120 @@ MAN_SB = "Manrope-SemiBold.ttf"
 MONO = "JetBrainsMono-Bold.ttf"
 
 
+# ---------- перевірка імені (та сама логіка, що й у js/namecheck.js) ----------
+# Ім'я приходить у посиланні, тож його можна підробити. Мат чи набір символів на картинку не потрапить:
+# замість нього буде «Учасник».
+_V = "аеєиіїоуюяыэёaeiouy"
+_C_CYR = "бвгґджзклмнпрстфхцчшщ"
+_WORD = re.compile(r"^[а-яґєіїёa-z]+(?:['-][а-яґєіїёa-z]+)*$")
+_ROWS = [
+    "йцукенгшщзхї",
+    "йцукенгшщзхъ",
+    "фівапролджє",
+    "фывапролджэ",
+    "ячсмитьбю",
+    "qwertyuiop",
+    "asdfghjkl",
+    "zxcvbnm",
+    "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя",
+    "abcdefghijklmnopqrstuvwxyz",
+]
+_KEY_RUNS = {r[i : i + 4] for row in _ROWS for r in (row, row[::-1]) for i in range(len(r) - 3)}
+_BAD_WORD = [
+    re.compile(x)
+    for x in (
+        r"ху[йяию]",
+        r"хуе(?!рт)",
+        r"п[иі]зд",
+        r"бляд|блят|^бля$",
+        r"залуп",
+        r"г[ао]нд[оа]н",
+        r"п[иі]д[оа]р|педик|педераст",
+        r"шлюх|шалав",
+        r"дроч",
+        r"мудак|мудил|мудо[хз]",
+        r"мандавош|^манд[аиуо]$",
+        r"^сук[аиіуо]$|^сучк|^сучар",
+        r"^лох[иі]?$",
+        r"^чмо",
+        r"жоп",
+        r"говн|гівн",
+        r"^сра[кнтц]",
+        r"^д[еи]б[иі]л",
+        r"^[иі]д[иі]от",
+        r"^даун$",
+        r"курв",
+        r"уеб|йоб",
+        r"^(за|на|по|от|вы|ви|до|у|при|пере|раз|роз|з|с|від|недо|об|под)?(е|і)б"
+        r"(а[тлншв]|л[аои]|у[тчн]|о[шк]|ну|ан|ен|ись|ырь|ар)",
+        r"fuck|fuk|shit|bitch|cunt|asshole|whore|nigg|fagg|slut|porn|dildo|pussy",
+        r"pizd|blyad|blyat|zalup|mudak|pidor|pidar|gandon|gondon|shluh",
+        r"^suk[aiu]$|^eba[tln]|^zaeb|^nahu[iy]|^xu[iyj]|^xyu|^huy$|^huj",
+    )
+]
+_BAD_JOINED = [
+    re.compile(x)
+    for x in (
+        r"ху[йяию]",
+        r"п[иі]зд",
+        r"бляд|блят",
+        r"залуп",
+        r"г[ао]нд[оа]н",
+        r"fuck|shit|pizd|blyad",
+    )
+]
+
+
+def clean_name(raw):
+    s = unicodedata.normalize("NFC", str(raw or ""))
+    s = re.sub(r"[’ʼ`‘´]", "'", s)
+    return " ".join(s.split())
+
+
+def _for_bad(w):
+    w = w.lower().replace("ё", "е").replace("є", "е").replace("ї", "і")
+    w = re.sub(r"['-]", "", w)
+    return re.sub(r"(.)\1+", r"\1", w)
+
+
+def _gibberish(p):
+    if not any(c in _V for c in p):
+        return True
+    if re.search(r"(.)\1\1", p) or re.search(r"(.{2})\1\1", p) or re.fullmatch(r"(.{3,})\1+", p):
+        return True
+    if re.search(f"[{_V}]{{4,}}", p) or re.search(f"[{_C_CYR}bcdfghjklmnpqrstvwxz]{{6,}}", p):
+        return True
+    if len(p) >= 4 and sum(c in _V for c in p) / len(p) > 0.8:
+        return True
+    if any(p[i : i + 4] in _KEY_RUNS for i in range(len(p) - 3)):
+        return True
+    if re.match(r"[ьъы]", p) or (re.match(f"[{_C_CYR}]{{4}}", p) and not p.startswith("мкрт")):
+        return True
+    if re.search(f"[{_V[:13]}][ьъ]|[ьъ][ьъ]|йй|ыы|[{_C_CYR}]й", p):
+        return True
+    return bool(re.search("[ыэъё]", p) and re.search("[іїєґ]", p))
+
+
+def name_ok(raw):
+    """True, якщо це схоже на справжнє ім'я без мату."""
+    name = clean_name(raw)
+    if not 3 <= len(name) <= 48:
+        return False
+    words = name.lower().split(" ")
+    if len(words) > 4 or not all(_WORD.match(w) for w in words):
+        return False
+    if any(r.search(_for_bad(w)) for w in words for r in _BAD_WORD):
+        return False
+    if any(r.search(_for_bad("".join(words))) for r in _BAD_JOINED):
+        return False
+    for w in words:
+        if re.search("[а-яґєіїё]", w) and re.search("[a-z]", w):
+            return False
+        if any(len(p) < 2 or _gibberish(p) for p in w.replace("'", "").split("-")):
+            return False
+    return True
+
+
 # ---------- дані результату ----------
 def grade(s):
     """Звання за кількістю балів (ті самі пороги, що й у js/app.js)."""
@@ -89,7 +205,7 @@ def parse(qs):
             raw = base64.urlsafe_b64decode(q["u"] + padding).decode("utf-8")
         except (ValueError, UnicodeDecodeError):
             raw = ""
-    name = " ".join(raw.split())[:48] or "Гравець"
+    name = clean_name(raw)[:48] if name_ok(raw) else "Учасник"
 
     s = num("s", 0, 10)
     t = num("t", 0, 86400)

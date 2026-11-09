@@ -1,7 +1,7 @@
 rules_version = '2';
 // Правила для спільного рейтингу BUSINESS LAB (Cloud Firestore).
 // - читати рейтинг може будь-хто;
-// - з сайту можна лише ДОДАТИ один новий результат правильного формату;
+// - з сайту можна лише ДОДАТИ один новий результат правильного формату (ім'я — лише літери, без мату);
 // - змінювати й видаляти результати з сайту не може ніхто (очищення — тільки власник
 //   проєкту в Firebase Console: Firestore Database → results → ⋮ → Delete collection);
 // - усі інші колекції закриті.
@@ -16,6 +16,10 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 3
         && request.resource.data.name.size() <= 48
+        // лише літери (укр./рос./лат.), дефіс, апостроф; 1–4 слова через один пробіл
+        && request.resource.data.name.matches("^[A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*( [A-Za-zА-Яа-яЁёҐґЄєІіЇї]+(['-][A-Za-zА-Яа-яЁёҐґЄєІіЇї]+)*){0,3}$")
+        // основний мат (повна перевірка — js/namecheck.js; тут — щоб не обійти сайт прямим запитом)
+        && !request.resource.data.name.lower().matches(".*(ху[йяию]|п[иі]зд|бля[дт]|залуп|г[ао]нд[оа]н|п[иі]д[оа]р|fuck|shit|bitch|pizd|blyad).*")
         && request.resource.data.score is int
         && request.resource.data.score >= 0
         && request.resource.data.score <= 10

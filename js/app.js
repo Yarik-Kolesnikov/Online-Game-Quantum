@@ -449,9 +449,12 @@ function personKey(name) {
     .join(" ");
 }
 
+// записи з некоректним ім'ям (мат, набір літер) у рейтингу не показуються — див. js/namecheck.js
+const nameOk = (r) => r && BL.checkName(r.name).ok;
+
 function latestPerPerson(list) {
   const byPerson = new Map();
-  list.forEach((r) => {
+  list.filter(nameOk).forEach((r) => {
     const k = personKey(r.name);
     const prev = byPerson.get(k);
     if (!prev || better(r, prev) > 0) byPerson.set(k, r);
@@ -475,7 +478,7 @@ const TOP = 100;
 
 async function saveResult() {
   const rec = {
-    name: state.player,
+    name: BL.cleanName(state.player),
     score: score(),
     total: CARDS,
     timeMs: state.finishedAt - state.startedAt,
@@ -732,14 +735,16 @@ function openRatingOnly() {
 /* ---------- події ---------- */
 $("startForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  const name = $("playerName").value.replace(/\s+/g, " ").trim();
-  const ok = name.length >= 3 && name.split(" ").length >= 2;
-  $("nameErr").hidden = ok;
-  if (!ok) {
+  const check = BL.checkName($("playerName").value);
+  $("nameErr").hidden = check.ok;
+  $("playerName").setAttribute("aria-invalid", String(!check.ok));
+  if (!check.ok) {
+    $("nameErr").textContent = check.reason;
     $("playerName").focus();
     return;
   }
-  startGame(name);
+  $("playerName").value = check.name;
+  startGame(check.name);
 });
 
 $("openRatingBtn").addEventListener("click", openRatingOnly);

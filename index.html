@@ -3,16 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <!-- стара адреса (GitHub Pages) веде на нову: business-lab-zp.vercel.app -->
-    <script>
-      if (/github\.io$/.test(location.hostname))
-        location.replace("https://business-lab-zp.vercel.app/" + location.search + location.hash);
-    </script>
+    <script src="js/redirect.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>BUSINESS LAB</title>
     <!-- іконка вкладки: логотип BUSINESS LAB -->
-    <link rel="icon" href="img/favicon.svg?v=20261102b" type="image/svg+xml" />
-    <link rel="icon" href="img/favicon-32.png?v=20261102b" sizes="32x32" type="image/png" />
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png?v=20261102b" />
+    <link rel="icon" href="img/favicon.svg?v=20261109" type="image/svg+xml" />
+    <link rel="icon" href="img/favicon-32.png?v=20261109" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png?v=20261109" />
     <meta name="theme-color" content="#0253ce" />
     <meta
       name="description"
@@ -38,7 +35,7 @@
       href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=20261102b" />
+    <link rel="stylesheet" href="css/style.css?v=20261109" />
     <style>
       body {
         margin: 0;
@@ -55,7 +52,7 @@
       <div class="sp-dots sp-dots-br" aria-hidden="true"></div>
       <img
         class="sp-deco sp-left"
-        src="img/splash-left.webp?v=20261102b"
+        src="img/splash-left.webp?v=20261109"
         width="600"
         height="571"
         alt=""
@@ -63,7 +60,7 @@
       />
       <img
         class="sp-deco sp-right"
-        src="img/splash-right.webp?v=20261102b"
+        src="img/splash-right.webp?v=20261109"
         width="416"
         height="696"
         alt=""
@@ -170,7 +167,7 @@
               <!-- світла тема -->
               <img
                 class="fig-light"
-                src="img/kafedry.jpg?v=20261102b"
+                src="img/kafedry.jpg?v=20261109"
                 width="1280"
                 height="853"
                 alt="П'ять кафедр факультету: Маркетинг та цифрові технології — ідеї, бренди, комунікації, цифрові інструменти та інновації; Облік та фінанси — фінанси, облік, аудит, економічна аналітика, стабільне майбутнє; Економіка та митна справа — економічні процеси, міжнародна торгівля, митна діяльність; Бізнес та управління — стратегія, розвиток, підприємництво, успішні проєкти; Менеджмент та адміністрування — люди, процеси, ефективні рішення, лідерство."
@@ -178,7 +175,7 @@
               <!-- темна тема (вмикається разом із кнопкою «Темна») -->
               <img
                 class="fig-dark"
-                src="img/kafedry-dark.jpg?v=20261102b"
+                src="img/kafedry-dark.jpg?v=20261109"
                 width="1280"
                 height="853"
                 alt=""
@@ -216,9 +213,7 @@
               placeholder="Ім'я"
             />
             <p class="hint">Ім'я з'явиться в загальному рейтингу.</p>
-            <p class="err" id="nameErr" hidden>
-              Введіть ПІБ: щонайменше прізвище та ім'я через пробіл.
-            </p>
+            <p class="err" id="nameErr" hidden>Введіть справжнє ім'я та прізвище.</p>
             <button type="submit" class="btn btn-primary btn-wide" id="startBtn">
               <span id="startLabel">Почати гру</span> <span aria-hidden="true">→</span>
             </button>
@@ -458,14 +453,15 @@
     <div class="toast" id="toast" hidden></div>
 
     <!-- Порядок важливий: налаштування → питання → логіка гри -->
-    <script src="js/config.js?v=20261102b"></script>
-    <script src="js/questions/marketing-digital.js?v=20261102b"></script>
-    <script src="js/questions/management-administration.js?v=20261102b"></script>
-    <script src="js/questions/accounting-finance.js?v=20261102b"></script>
-    <script src="js/questions/business-management.js?v=20261102b"></script>
-    <script src="js/questions/economics-customs.js?v=20261102b"></script>
-    <script src="js/firebase-config.js?v=20261102b"></script>
-    <script src="js/app.js?v=20261102b"></script>
-    <script src="js/share.js?v=20261102b"></script>
+    <script src="js/config.js?v=20261109"></script>
+    <script src="js/questions/marketing-digital.js?v=20261109"></script>
+    <script src="js/questions/management-administration.js?v=20261109"></script>
+    <script src="js/questions/accounting-finance.js?v=20261109"></script>
+    <script src="js/questions/business-management.js?v=20261109"></script>
+    <script src="js/questions/economics-customs.js?v=20261109"></script>
+    <script src="js/firebase-config.js?v=20261109"></script>
+    <script src="js/namecheck.js?v=20261109"></script>
+    <script src="js/app.js?v=20261109"></script>
+    <script src="js/share.js?v=20261109"></script>
   </body>
 </html>
