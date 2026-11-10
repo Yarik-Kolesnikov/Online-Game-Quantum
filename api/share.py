@@ -16,6 +16,8 @@ BUSINESS LAB — сторінка й картинка результату дл�
 
 import base64
 import io
+import json
+import math
 import os
 import re
 import unicodedata
@@ -59,54 +61,45 @@ MONO = "JetBrainsMono-Bold.ttf"
 
 
 # ---------- перевірка імені (та сама логіка, що й у js/namecheck.js) ----------
-# Ім'я приходить у посиланні, тож його можна підробити. Мат чи набір символів на картинку не потрапить:
-# замість нього буде «Учасник».
+# Ім'я приходить у посиланні, тож його можна підробити. Мат чи набір літер на картинку не потрапить:
+# замість нього буде «Учасник». Статистичну модель беремо з js/namemodel.js — одне джерело даних.
 _V = "аеєиіїоуюяыэёaeiouy"
-_C_CYR = "бвгґджзклмнпрстфхцчшщ"
+_CYR_RE = re.compile("[а-яґєіїё]")
 _WORD = re.compile(r"^[а-яґєіїёa-z]+(?:['-][а-яґєіїёa-z]+)*$")
-_ROWS = [
-    "йцукенгшщзхї",
-    "йцукенгшщзхъ",
-    "фівапролджє",
-    "фывапролджэ",
-    "ячсмитьбю",
-    "qwertyuiop",
-    "asdfghjkl",
-    "zxcvbnm",
-    "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя",
-    "abcdefghijklmnopqrstuvwxyz",
-]
-_KEY_RUNS = {r[i : i + 4] for row in _ROWS for r in (row, row[::-1]) for i in range(len(r) - 3)}
+_ROWS = ["йцукенгшщзхї", "йцукенгшщзхъ", "фівапролджє", "фывапролджэ", "ячсмитьбю"]
+_ROWS += ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
+_KEY_RUNS = {r[i : i + 5] for row in _ROWS for r in (row, row[::-1]) for i in range(len(r) - 4)}
 _BAD_WORD = [
     re.compile(x)
     for x in (
         r"ху[йяию]",
         r"хуе(?!рт)",
         r"п[иі]зд",
-        r"бляд|блят|^бля$",
+        r"^бляд|^блят|^бля$",
         r"залуп",
         r"г[ао]нд[оа]н",
-        r"п[иі]д[оа]р|педик|педераст",
-        r"шлюх|шалав",
-        r"дроч",
+        r"^п[иі]д[оа]р(ас)?$|^п[иі]д[оа]рас|^п[иі]дар$|педераст|^педик$",
+        r"^шлюх[аиіоу]?$|^шалав[аиіоу]?$",
+        r"^дроч(ил|ун|ер|ит|и$|у$|а$)",
         r"мудак|мудил|мудо[хз]",
         r"мандавош|^манд[аиуо]$",
-        r"^сук[аиіуо]$|^сучк|^сучар",
-        r"^лох[иі]?$",
-        r"^чмо",
+        r"^сук[аиіуо]$|^сучк[аиу]$|^сучар",
+        r"^чмо$|^чмошн",
         r"жоп",
-        r"говн|гівн",
+        r"^говн|^гівн|говнюк|гівнюк",
         r"^сра[кнтц]",
         r"^д[еи]б[иі]л",
         r"^[иі]д[иі]от",
         r"^даун$",
         r"курв",
         r"уеб|йоб",
-        r"^(за|на|по|от|вы|ви|до|у|при|пере|раз|роз|з|с|від|недо|об|под)?(е|і)б"
+        r"^(за|на|по|от|вы|ви|до|у|при|пере|раз|роз|від|недо|об|под)?еб"
         r"(а[тлншв]|л[аои]|у[тчн]|о[шк]|ну|ан|ен|ись|ырь|ар)",
-        r"fuck|fuk|shit|bitch|cunt|asshole|whore|nigg|fagg|slut|porn|dildo|pussy",
-        r"pizd|blyad|blyat|zalup|mudak|pidor|pidar|gandon|gondon|shluh",
-        r"^suk[aiu]$|^eba[tln]|^zaeb|^nahu[iy]|^xu[iyj]|^xyu|^huy$|^huj",
+        r"^(за|на|по|від|ви|до|у|при|пере|роз|недо|об|під)іб(а[тлншв]|ну|ан)",
+        r"fuck|bitch|asshole|whore|nigg|fagg|dildo|pussy",
+        r"^shit|shit$|^cunt$|^sluts?$|^porno?$",
+        r"pizd|blyad|blyat|zalup|mudak|^pidor|^pidar|^g[ao]nd[oa]n$|shluh",
+        r"^suk[aiu]$|^eba[tln]|^zaeb|^nahu[iy]|^xyu$|^xuy$|^huj$",
     )
 ]
 _BAD_JOINED = [
@@ -122,6 +115,56 @@ _BAD_JOINED = [
 ]
 
 
+def _load_model():
+    for path in (
+        os.path.join(HERE, "..", "js", "namemodel.js"),
+        os.path.join(os.getcwd(), "js", "namemodel.js"),
+    ):
+        try:
+            src = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        body = src[src.index("nameModel =") :]
+        raw = json.loads(body[body.index("{") : body.rindex("}") + 1])
+        out = {}
+        for kind in ("cyr", "lat"):
+
+            def unpack(st, n):
+                return {e[:n]: int(e[n:], 36) for e in st.split(",")} if st else {}
+
+            c3, c2, c1 = (
+                unpack(raw[kind]["t"], 3),
+                unpack(raw[kind]["b"], 2),
+                unpack(raw[kind]["u"], 1),
+            )
+            h1, ctx = {}, {}
+            for k, v in c2.items():
+                h1[k[0]] = h1.get(k[0], 0) + v
+            for k, v in c3.items():
+                ctx[k[:2]] = ctx.get(k[:2], 0) + v
+            out[kind] = (c3, c2, c1, h1, ctx, sum(c1.values()), len(c1), raw["th"][kind])
+        return out
+    return {}
+
+
+_MODEL = _load_model()
+
+
+def _model_score(m, w):
+    c3, c2, c1, h1, ctx, n, v, _ = m
+    x = "^^" + w + "$"
+    total = 0.0
+    for i in range(2, len(x)):
+        a, b, c = x[i - 2], x[i - 1], x[i]
+        p1 = (c1.get(c, 0) + 1) / (n + v)
+        h = h1.get(b, 0)
+        p2 = (c2.get(b + c, 0) + 0.1) / (h + 0.1 * v) if h else p1
+        hc = ctx.get(a + b, 0)
+        p3 = c3.get(a + b + c, 0) / hc if hc else 0
+        total += math.log(0.75 * p3 + 0.2 * p2 + 0.05 * p1)
+    return total / (len(x) - 2)
+
+
 def clean_name(raw):
     s = unicodedata.normalize("NFC", str(raw or ""))
     s = re.sub(r"[’ʼ`‘´]", "'", s)
@@ -134,88 +177,38 @@ def _for_bad(w):
     return re.sub(r"(.)\1+", r"\1", w)
 
 
-def _load_sets():
-    """Словники пар літер беремо з js/namecheck.js — одне джерело для сайту й сервера."""
-    for path in (
-        os.path.join(HERE, "..", "js", "namecheck.js"),
-        os.path.join(os.getcwd(), "js", "namecheck.js"),
-    ):
-        try:
-            src = open(path, encoding="utf-8").read()
-        except OSError:
-            continue
-        out = {}
-        for key in ("PAIRS", "START_CC", "END_CC", "CCC"):
-            m = re.search(rf"const {key} = new Set\((.*?)\);", src, re.S)
-            out[key] = set(" ".join(re.findall(r'"([^"]*)"', m.group(1))).split()) if m else set()
-        return out
-    return {}
-
-
-_SETS = _load_sets()
-_CYR_V = "аеєиіїоуюяыэё"
-_CYR_RE = re.compile("[а-яґєіїё]")
-
-
-def _data_bad(p):
-    """Перевірки за словником пар літер (ті самі, що rarePairsBad/badEdges/badCluster у JS)."""
-    if not _SETS:
-        return False
-    pairs, cyr = _SETS["PAIRS"], bool(_CYR_RE.search(p))
-    rare = [p[i : i + 2] for i in range(len(p) - 1) if p[i : i + 2] not in pairs]
-    hard = [x for x in rare if (x[0] in _V) == (x[1] in _V)]
-    if len(rare) >= 2 or (cyr and hard):
-        return True
-    if not cyr:
-        return False
-    cons = re.compile(f"[{_C_CYR}йь]{{2}}")
-    if len(p) >= 3:
-        if cons.fullmatch(p[:2]) and p[:2] not in _SETS["START_CC"]:
-            return True
-        if cons.fullmatch(p[-2:]) and p[-2:] not in _SETS["END_CC"]:
-            return True
-    cons3 = re.compile(f"[{_C_CYR}йь]{{3}}")
-    return any(
-        cons3.fullmatch(p[i : i + 3]) and p[i : i + 3] not in _SETS["CCC"]
-        for i in range(len(p) - 2)
-    )
-
-
-def _repeated_trigram(p):
-    if len(p) < 8:
-        return False
-    tris = [p[i : i + 3] for i in range(len(p) - 2)]
-    return len(set(tris)) < len(tris)
+def _periodic(p):
+    for per in (2, 3, 4):
+        run = 0
+        for i in range(len(p) - per):
+            run = run + 1 if p[i] == p[i + per] else 0
+            if run + per >= 2 * per + 2:
+                return True
+    return False
 
 
 def _gibberish(p):
     if not any(c in _V for c in p):
         return True
-    if re.search(r"(.)\1\1", p) or re.search(r"(.{2,4})\1\1", p) or re.fullmatch(r"(.{2,})\1+", p):
+    if re.search(r"(.)\1\1", p) or re.search(r"(.{2,4})\1\1", p) or _periodic(p):
         return True
-    if _CYR_RE.search(p) and re.search(f"[{_CYR_V}]{{3}}", p):
+    if len(p) > 20 or any(p[i : i + 5] in _KEY_RUNS for i in range(len(p) - 4)):
         return True
-    if len(p) > 20 or _repeated_trigram(p):
+    cyr = bool(_CYR_RE.search(p))
+    if cyr and re.search("[бвгґджзйклмнпрстфхцчшщ]{6,}", p):
         return True
-    if re.match(r"(.)\1", p) and not p.startswith("ll"):
+    if re.match("[ьъы]", p):
         return True
-    if _data_bad(p):
+    if cyr and re.search("[аеєиіїоуюяыэё][ьъ]|[ьъ][ьъ]|йй|ыы", p):
         return True
-    if re.search(f"[{_V}]{{4,}}", p) or re.search(f"[{_C_CYR}bcdfghjklmnpqrstvwxz]{{6,}}", p):
+    if re.search("[ыэъё]", p) and re.search("[іїєґ]", p):
         return True
-    if len(p) >= 4 and sum(c in _V for c in p) / len(p) > 0.8:
-        return True
-    if any(p[i : i + 4] in _KEY_RUNS for i in range(len(p) - 3)):
-        return True
-    if re.match(r"[ьъы]", p) or (re.match(f"[{_C_CYR}]{{4}}", p) and not p.startswith("мкрт")):
-        return True
-    if re.search(f"[{_V[:13]}][ьъ]|[ьъ][ьъ]|йй|ыы|[{_C_CYR}]й", p):
-        return True
-    return bool(re.search("[ыэъё]", p) and re.search("[іїєґ]", p))
+    m = _MODEL.get("cyr" if cyr else "lat")
+    return bool(m and _model_score(m, p.replace("ґ", "г").replace("ё", "е")) < m[7])
 
 
 def name_ok(raw):
-    """True, якщо це схоже на справжнє ім'я без мату."""
+    """True, якщо це схоже на справжнє ім'я та прізвище без мату."""
     name = clean_name(raw)
     if not 3 <= len(name) <= 48:
         return False
@@ -224,10 +217,12 @@ def name_ok(raw):
         return False
     if any(r.search(_for_bad(w)) for w in words for r in _BAD_WORD):
         return False
-    if any(r.search(_for_bad("".join(words))) for r in _BAD_JOINED):
+    if any(len(w) <= 3 for w in words) and any(
+        r.search(_for_bad("".join(words))) for r in _BAD_JOINED
+    ):
         return False
     for w in words:
-        if re.search("[а-яґєіїё]", w) and re.search("[a-z]", w):
+        if _CYR_RE.search(w) and re.search("[a-z]", w):
             return False
         if any(len(p) < 2 or _gibberish(p) for p in w.replace("'", "").split("-")):
             return False

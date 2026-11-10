@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/share.py": { "includeFiles": "{fonts/**,js/namecheck.js}", "maxDuration": 10 }
+    "api/share.py": { "includeFiles": "{fonts/**,js/namemodel.js}", "maxDuration": 10 }
   },
   "rewrites": [
     { "source": "/r", "destination": "/api/share" },
