@@ -27,6 +27,9 @@ import re
 CYR = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюяыэъё"
 LAT = "abcdefghijklmnopqrstuvwxyz"
 THRESHOLDS = {"cyr": -4.2, "lat": -3.7}
+# ім'я + прізвище разом: середній запас над порогом менший за це = обидва слова «на межі» → каляки.
+# На справжніх парах (часте ім'я + відкладене прізвище) відхиляє ≈0.06%.
+PAIR_MARGIN = {"cyr": 0.7, "lat": 0.5}
 PRUNE = 2  # трійки, що трапились лише раз, відкидаємо (менший файл, точність та сама)
 
 
@@ -76,7 +79,7 @@ def main():
     ap.add_argument("--lat", nargs="+", required=True)
     ap.add_argument("--out", default="js/namemodel.js")
     a = ap.parse_args()
-    model = {"th": THRESHOLDS}
+    model = {"th": THRESHOLDS, "pair": PAIR_MARGIN}
     for kind, files, alpha in (("cyr", a.cyr, CYR), ("lat", a.lat, LAT)):
         words = load(files, alpha)
         c3, c2, c1 = build(words)
@@ -87,7 +90,9 @@ def main():
             "/* Згенеровано tools/build_name_model.py — не редагувати вручну.\n"
             "   Лічильники трійок/пар/літер зі справжніх імен і прізвищ (див. опис у скрипті). */\n"
             "window.BL = window.BL || {};\n"
-            "window.BL.nameModel = " + json.dumps(model, ensure_ascii=False, separators=(",", ":")) + ";\n"
+            "window.BL.nameModel = "
+            + json.dumps(model, ensure_ascii=False, separators=(",", ":"))
+            + ";\n"
         )
 
 

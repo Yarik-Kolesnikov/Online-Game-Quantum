@@ -15,6 +15,8 @@
      2) статистична модель (js/namemodel.js, tools/build_name_model.py): ймовірність кожної
         літери після двох попередніх, навчена на справжніх іменах і прізвищах. Середній бал нижче
         порогу = набір навмання. На відкладених 10% справжніх імен відхиляє ≈0.1%.
+     3) ім'я й прізвище разом: якщо обидва слова лише ледь проходять поріг («ррсарм ашолідосч»),
+        це теж набір навмання (на справжніх парах помиляється ≈0.06%).
 
    Та сама логіка — в api/share.py (картинка результату); формат і мат — ще й у firestore.rules.
    Підключається після namemodel.js і ДО app.js. Експортує BL.cleanName(name), BL.checkName(name). */
@@ -144,9 +146,29 @@
     if (/^[ьъы]/.test(part)) return true;
     if (cyr && /[аеєиіїоуюяыэё][ьъ]|[ьъ][ьъ]|йй|ыы/.test(part)) return true;
     if (/[ыэъё]/.test(part) && /[іїєґ]/.test(part)) return true; // рос. + укр. літери разом
-    const m = model(cyr ? "cyr" : "lat");
-    if (m && modelScore(m, part.replace(/ґ/g, "г").replace(/ё/g, "е")) < m.th) return true;
-    return false;
+    if (cyr && /^([бвгґджзйклмнпрстфхцчшщ])\1/.test(part) && !/^(вв|лл)/.test(part)) return true; // «ррсарм»
+    return margin(part) < 0;
+  }
+
+  // наскільки слово «справжніше» за поріг моделі (≥ 0 — проходить; без моделі — 1)
+  function margin(part) {
+    const kind = IS_CYR.test(part) ? "cyr" : "lat";
+    const m = model(kind);
+    if (!m) return 1;
+    return modelScore(m, part.replace(/ґ/g, "г").replace(/ё/g, "е")) - m.th;
+  }
+
+  // ім'я та прізвище разом: якщо обидва ледь проходять — це теж набір навмання
+  function pairTooWeak(words) {
+    if (!BL.nameModel || !BL.nameModel.pair) return false;
+    let sum = 0;
+    let need = 0;
+    words.forEach((w) => {
+      const parts = w.replace(/'/g, "").split("-");
+      sum += parts.reduce((a, p) => a + margin(p), 0) / parts.length;
+      need += BL.nameModel.pair[IS_CYR.test(w) ? "cyr" : "lat"];
+    });
+    return sum / words.length < need / words.length;
   }
 
   // однакові апострофи, один пробіл між словами
@@ -200,6 +222,11 @@
           reason: "Схоже на випадковий набір літер. Введіть справжнє ім'я та прізвище.",
         };
     }
+    if (pairTooWeak(words))
+      return {
+        ok: false,
+        reason: "Схоже на випадковий набір літер. Введіть справжнє ім'я та прізвище.",
+      };
     return { ok: true, name };
   }
 

@@ -126,7 +126,7 @@ def _load_model():
             continue
         body = src[src.index("nameModel =") :]
         raw = json.loads(body[body.index("{") : body.rindex("}") + 1])
-        out = {}
+        out = {"pair": raw.get("pair", {})}
         for kind in ("cyr", "lat"):
 
             def unpack(st, n):
@@ -148,6 +148,7 @@ def _load_model():
 
 
 _MODEL = _load_model()
+_PAIR = _MODEL.pop("pair", {})
 
 
 def _model_score(m, w):
@@ -203,8 +204,28 @@ def _gibberish(p):
         return True
     if re.search("[ыэъё]", p) and re.search("[іїєґ]", p):
         return True
-    m = _MODEL.get("cyr" if cyr else "lat")
-    return bool(m and _model_score(m, p.replace("ґ", "г").replace("ё", "е")) < m[7])
+    if cyr and re.match("([бвгґджзйклмнпрстфхцчшщ])\\1", p) and not p[:2] in ("вв", "лл"):
+        return True
+    return _margin(p) < 0
+
+
+def _margin(p):
+    kind = "cyr" if _CYR_RE.search(p) else "lat"
+    m = _MODEL.get(kind)
+    if not m:
+        return 1.0
+    return _model_score(m, p.replace("ґ", "г").replace("ё", "е")) - m[7]
+
+
+def _pair_too_weak(words):
+    if not _PAIR:
+        return False
+    total = need = 0.0
+    for w in words:
+        parts = w.replace("'", "").split("-")
+        total += sum(_margin(p) for p in parts) / len(parts)
+        need += _PAIR["cyr" if _CYR_RE.search(w) else "lat"]
+    return total / len(words) < need / len(words)
 
 
 def name_ok(raw):
@@ -226,7 +247,7 @@ def name_ok(raw):
             return False
         if any(len(p) < 2 or _gibberish(p) for p in w.replace("'", "").split("-")):
             return False
-    return True
+    return not _pair_too_weak(words)
 
 
 # ---------- дані результату ----------
